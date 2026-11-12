@@ -2,9 +2,17 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="light dark" />
-    <link rel="icon" href="data:," />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#171a22" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="description" content="Tạo watermark chữ đẹp trên ảnh, chỉnh sửa trực tiếp trên điện thoại và tải ảnh độ phân giải gốc." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png" />
+    <meta name="color-scheme" content="dark" />
+    
     <title>Textmask cho ảnh</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -294,11 +302,25 @@
         * { transition: none !important; }
       }
     </style>
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-1" />
   </head>
   <body>
     <div class="wrap">
       <header class="intro">
-        <h1>Tạo textmask cho ảnh</h1>
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true">T</span>
+          <div>
+            <h1>Textmask <span>Studio</span></h1>
+            <span class="brand-subtitle">PHỦ CHỮ LÊN ẢNH</span>
+          </div>
+        </div>
+        <button type="button" class="app-more" id="mobileMoreBtn"
+          aria-label="Thêm công cụ và trợ giúp" aria-haspopup="dialog"
+          aria-controls="editorPanel" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>
+          </svg>
+        </button>
       </header>
 
       <div class="layout">
@@ -333,7 +355,7 @@
           </div>
         </section>
 
-        <aside class="panel" aria-label="Tuỳ chỉnh textmask">
+        <aside class="panel" id="editorPanel" aria-label="Tuỳ chỉnh textmask">
           <div class="field">
             <div class="label"><span>Nội dung chữ</span></div>
             <input class="text-input" id="textInput" type="text" value="Phạm Thu Thảo" maxlength="60" autocomplete="off" />
@@ -422,6 +444,41 @@
         </aside>
       </div>
     </div>
+    <div class="app-scrim" id="appScrim" aria-hidden="true"></div>
+    <nav class="mobile-dock" id="mobileDock" aria-label="Thanh công cụ chỉnh ảnh">
+      <button class="dock-item" type="button" data-mobile-tab="photo" aria-label="Chọn ảnh" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 16 5-5 4 4 3-3 6 6"/>
+        </svg>
+        <span>Ảnh</span>
+      </button>
+      <button class="dock-item" type="button" data-mobile-tab="text" aria-controls="editorPanel" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 7V5h16v2M12 5v14M8 19h8"/>
+        </svg>
+        <span>Chữ</span>
+      </button>
+      <button class="dock-item" type="button" data-mobile-tab="style" aria-controls="editorPanel" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>
+        </svg>
+        <span>Kiểu</span>
+      </button>
+      <button class="dock-item" type="button" data-mobile-tab="adjust" aria-controls="editorPanel" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#171a22"/><circle cx="16" cy="17" r="3" fill="#171a22"/>
+        </svg>
+        <span>Chỉnh</span>
+      </button>
+      <button class="dock-item export" type="button" data-mobile-tab="export" aria-controls="editorPanel" aria-expanded="false">
+        <span class="dock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/>
+          </svg>
+        </span>
+        <span>Xuất</span>
+      </button>
+    </nav>
     <div class="shortcuts-overlay" id="shortcutsOverlay">
       <div class="shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
         <h2 id="shortcutsTitle">Phím tắt <button class="btn" id="shortcutsClose" type="button">Đóng <kbd>Esc</kbd></button></h2>
@@ -1390,5 +1447,6 @@
         document.fonts.ready.then(function () { render(); refreshThumbs(); });
       }
     </script>
+    <script src="./mobile-ui.js?v=20261113-1"></script>
   </body>
 </html>
