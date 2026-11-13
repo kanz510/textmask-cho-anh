@@ -372,8 +372,8 @@
 
           <div class="field">
             <div class="label"><span>Mật độ phủ chữ</span><span class="val" id="gapVal">Hơi thưa</span></div>
-            <input type="range" id="gapRange" min="1" max="5" step="1" value="2" aria-label="Mật độ phủ chữ, từ thưa đến dày" />
-            <div class="density-scale" aria-hidden="true"><span>Thưa</span><span>Dày</span></div>
+            <input type="range" id="gapRange" min="1" max="5" step="1" value="1" aria-label="Mật độ phủ chữ, từ thưa đến dày" />
+            <div class="density-scale" aria-hidden="true"><span>Rất thưa</span><span>Dày</span></div>
             <p class="hint density-hint">Mật độ điều chỉnh riêng khoảng cách ngang và dọc; mức Thưa tạo lưới so le, thoáng như mẫu.</p>
           </div>
 
@@ -513,7 +513,7 @@
         font: FONTS[0],
         sizePct: 3.1,
         opacity: 55,
-        gap: 2.35,
+        gap: 4.2,
         angle: 0,
         color: "#ffffff",
         color2: "#ffd94d",
@@ -649,8 +649,8 @@
         // Keep horizontal and vertical rhythm independent. The sparse preset
         // is tuned to the user's reference: roughly 4-5 columns and 7-8 rows
         // on a portrait photo when using a small watermark font.
-        var stepX = tw + fp * (3.2 + o.gap * 2.2);
-        var stepY = fp * (6.5 + o.gap * 2.2);
+        var stepX = tw + fp * (4.2 + o.gap * 2.6);
+        var stepY = fp * (8.2 + o.gap * 2.8);
         var diag = Math.sqrt(W * W + H * H);
         var cx = W / 2, cy = H / 2;
         var x, y, row, col;
@@ -713,7 +713,7 @@
             break;
           }
           case "random": {
-            var count = Math.max(6, Math.round((W * H) / (stepX * stepY)));
+            var count = Math.max(4, Math.round((W * H) / (stepX * stepY * 1.25)));
             var rnd = mulberry32(hashStr(o.text + "|" + W + "x" + H + "|" + o.style));
             for (var i = 0; i < count; i++) {
               drawOne(ctx, rnd() * W, rnd() * H, (rnd() * 56 - 28) + o.angleDeg, o);
@@ -776,8 +776,8 @@
         if (!state.logoOn || !state.logo) return;
         var lw = Math.max(24, W * state.sizePct / 100 * 4);
         var lh = lw * state.logoH / state.logoW;
-        var stepX = lw * (1.5 + state.gap * 1.2);
-        var stepY = lh * (2.1 + state.gap * 1.4);
+        var stepX = lw * (2.2 + state.gap * 1.1);
+        var stepY = lh * (3.4 + state.gap * 1.4);
         ctx.save();
         ctx.globalAlpha = state.opacity / 100;
         if (state.angle) { ctx.translate(W / 2, H / 2); ctx.rotate(state.angle * Math.PI / 180); ctx.translate(-W / 2, -H / 2); }
@@ -1090,10 +1090,10 @@
       bindRange("opacityRange", "opacityVal", function (v) { return Math.round(v) + "%"; }, function (v) { state.opacity = v; });
       var densityRange = document.getElementById("gapRange");
       var densityValue = document.getElementById("gapVal");
-      var densityNames = ["Thưa", "Hơi thưa", "Vừa", "Dày", "Rất dày"];
+      var densityNames = ["Rất thưa", "Thưa", "Hơi thưa", "Vừa", "Dày"];
       function densityToGap(level) {
-        // Level 1 is the wide, airy reference spacing; level 5 is denser.
-        return 3.25 - level * 0.45;
+        var spacing = [4.2, 3.5, 2.8, 2.1, 1.4];
+        return spacing[level - 1] || spacing[0];
       }
       function updateDensity() {
         var level = Math.max(1, Math.min(5, Math.round(parseFloat(densityRange.value))));

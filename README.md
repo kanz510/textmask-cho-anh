@@ -49,4 +49,4 @@ Trong mục **Chỉnh**, thanh **Mật độ phủ chữ** có 5 mức từ **Th
 
 ### Hiệu chỉnh mật độ theo ảnh tham chiếu
 
-Mức **Thưa** dùng khoảng cách ngang/dọc riêng biệt để tạo lưới so le thoáng hơn (mục tiêu khoảng 4–5 cột và 7–8 hàng trên ảnh dọc khi cỡ chữ nhỏ). Các mức còn lại giảm dần khoảng cách để tăng mật độ. Kiểu dải ngang và cột dọc cũng dùng cùng nhịp khoảng cách tương ứng.
+Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn hơn rõ rệt để tạo lưới thoáng; kiểu rải ngẫu nhiên và logo lặp cũng giảm số lượng tương ứng. Các mức còn lại giảm dần khoảng cách để tăng mật độ. Kiểu dải ngang và cột dọc cũng dùng cùng nhịp khoảng cách tương ứng.
