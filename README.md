@@ -45,3 +45,8 @@ Phông chữ và mẫu dùng trong công cụ là tài nguyên mở miễn phí,
 ### Điều chỉnh mật độ phủ chữ
 
 Trong mục **Chỉnh**, thanh **Mật độ phủ chữ** có 5 mức từ **Thưa** đến **Rất dày**. Mặc định là **Hơi thưa** để ảnh thoáng hơn. Điều khiển này điều chỉnh khoảng cách lặp của chữ/logo trên các kiểu phủ dạng lưới, chéo, lệch và rải ngẫu nhiên; không thay đổi cỡ chữ hay độ mờ.
+
+
+### Hiệu chỉnh mật độ theo ảnh tham chiếu
+
+Mức **Thưa** dùng khoảng cách ngang/dọc riêng biệt để tạo lưới so le thoáng hơn (mục tiêu khoảng 4–5 cột và 7–8 hàng trên ảnh dọc khi cỡ chữ nhỏ). Các mức còn lại giảm dần khoảng cách để tăng mật độ. Kiểu dải ngang và cột dọc cũng dùng cùng nhịp khoảng cách tương ứng.

@@ -276,7 +276,7 @@
         * { transition: none !important; }
       }
     </style>
-    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-6" />
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-7" />
   </head>
   <body>
     <div class="wrap">
@@ -374,7 +374,7 @@
             <div class="label"><span>Mật độ phủ chữ</span><span class="val" id="gapVal">Hơi thưa</span></div>
             <input type="range" id="gapRange" min="1" max="5" step="1" value="2" aria-label="Mật độ phủ chữ, từ thưa đến dày" />
             <div class="density-scale" aria-hidden="true"><span>Thưa</span><span>Dày</span></div>
-            <p class="hint density-hint">Chọn mức phủ thoáng hoặc dày hơn. Áp dụng cho chữ và logo.</p>
+            <p class="hint density-hint">Mật độ điều chỉnh riêng khoảng cách ngang và dọc; mức Thưa tạo lưới so le, thoáng như mẫu.</p>
           </div>
 
           <div class="field">
@@ -646,8 +646,11 @@
         ctx.strokeStyle = o.color;
         o.tw = ctx.measureText(o.text).width;
         var fp = o.fontPx, tw = o.tw;
-        var stepX = tw + fp * (1.1 + o.gap * 1.6);
-        var stepY = fp * (1.5 + o.gap * 1.5);
+        // Keep horizontal and vertical rhythm independent. The sparse preset
+        // is tuned to the user's reference: roughly 4-5 columns and 7-8 rows
+        // on a portrait photo when using a small watermark font.
+        var stepX = tw + fp * (3.2 + o.gap * 2.2);
+        var stepY = fp * (6.5 + o.gap * 2.2);
         var diag = Math.sqrt(W * W + H * H);
         var cx = W / 2, cy = H / 2;
         var x, y, row, col;
@@ -690,7 +693,7 @@
             gridRun(-30 + o.angleDeg, false);
             break;
           case "bands": {
-            var bandY = fp * (3.2 + o.gap * 2.2);
+            var bandY = stepY;
             row = 0;
             ctx.save();
             if (o.angleDeg) { ctx.translate(cx, cy); ctx.rotate(o.angleDeg * Math.PI / 180); ctx.translate(-cx, -cy); }
@@ -702,8 +705,9 @@
             break;
           }
           case "columns": {
-            var colX = tw * 0 + fp * (2.6 + o.gap * 2.0);
-            var vStep = tw + fp * 1.4;
+            // Rotated text uses the normal row pitch along its vertical axis.
+            var colX = stepY;
+            var vStep = stepX;
             for (x = colX / 2; x < W + colX; x += colX)
               for (y = vStep / 2; y < H + vStep; y += vStep) drawOne(ctx, x, y, 90 + o.angleDeg, o);
             break;
@@ -1088,7 +1092,7 @@
       var densityValue = document.getElementById("gapVal");
       var densityNames = ["Thưa", "Hơi thưa", "Vừa", "Dày", "Rất dày"];
       function densityToGap(level) {
-        // A larger spacing factor means fewer marks per image.
+        // Level 1 is the wide, airy reference spacing; level 5 is denser.
         return 3.25 - level * 0.45;
       }
       function updateDensity() {
