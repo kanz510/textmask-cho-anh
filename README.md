@@ -90,3 +90,11 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - Thanh công cụ gần mép đáy an toàn hơn, nhãn Xuất có tương phản rõ trên nền sáng.
 - Không đụng logic chỉnh ảnh, xuất ảnh gốc, công thức, IndexedDB và chức năng Lưu vào Ảnh.
 - Chưa thực hiện đo trực tiếp các tọa độ và safe area trên Safari/iPhone thực tế. Duy trì giới hạn này trong báo cáo kiểm thử.
+
+
+### V13.3 · Thanh công cụ bám mép dưới iPhone
+
+- Chuyển thanh điều hướng từ pill nổi cao phía trên mép đáy thành thanh full-width chạm đúng đáy viewport, bo hai góc trên. Không còn khoảng nền trống bên dưới thanh điều hướng.
+- Dành vùng cho home indicator bằng padding **bên trong** dock, giới hạn safe-area trên iPhone tránh sai số bất thường. Màn hình ngang cũng dùng chiều cao phù hợp.
+- Tự tăng vùng ảnh hiển thị còn lại tương ứng. Giữ nguyên các tab, chức năng và logic xuất ảnh sang album.
+- Đã xác nhận cú pháp/cấu trúc CSS và cập nhật cache; chưa kiểm thử trực tiếp Safari trên máy thật.
