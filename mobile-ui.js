@@ -205,11 +205,13 @@
   document.addEventListener("focusin", function (event) {
     if (mq.matches && event.target.matches && event.target.matches("#textInput, #recipeNameInput")) {
       document.body.classList.add("keyboard-open");
+      syncVisibleHeight();
     }
   });
   document.addEventListener("focusout", function (event) {
     if (event.target.matches && event.target.matches("#textInput, #recipeNameInput")) {
       document.body.classList.remove("keyboard-open");
+      syncVisibleHeight();
     }
   });
 
@@ -239,10 +241,25 @@
   else if (mq.addListener) mq.addListener(adaptLayout);
   adaptLayout();
 
-  // Keep the editor fitted to the visible iPhone viewport when the keyboard opens.
+  // Safari's visualViewport can be shorter than the full screen even with
+  // no keyboard. Only use it for an actual on-screen keyboard to avoid leaving
+  // a large blank band beneath the fixed navigation dock on iPhone.
   function syncVisibleHeight() {
-    if (!window.visualViewport || !mq.matches) return;
-    document.documentElement.style.setProperty("--app-height", window.visualViewport.height + "px");
+    if (!mq.matches) {
+      document.documentElement.style.removeProperty("--app-height");
+      return;
+    }
+    var vv = window.visualViewport;
+    var active = document.activeElement;
+    var editing = !!(active && /^(INPUT|TEXTAREA)$/.test(active.tagName) &&
+      !/^(range|color|file|checkbox|radio|button)$/i.test(active.type || ""));
+    var viewportH = window.innerHeight || document.documentElement.clientHeight;
+    var keyboardUp = !!(editing && vv && viewportH - vv.height > 120);
+    if (keyboardUp) {
+      document.documentElement.style.setProperty("--app-height", Math.round(vv.height) + "px");
+    } else {
+      document.documentElement.style.removeProperty("--app-height");
+    }
   }
   syncVisibleHeight();
   if (window.visualViewport) {

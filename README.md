@@ -80,3 +80,13 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - Sửa kiểm tra phiên bản thumbnail khi khôi phục công thức từ IndexedDB.
 - Không thay đổi bố cục, logic công thức, cách lưu một ảnh vào album iPhone; không thêm ZIP hay nút tải file.
 - Kiểm tra tĩnh và cú pháp JS đã chạy; chưa đo FPS hoặc RAM trực tiếp trên Safari iPhone.
+
+
+### V13.2 · Sửa bố cục iPhone, giữ nguyên chức năng
+
+- Header Nhiều ảnh / menu được đặt bên dưới vùng an toàn status bar/Dynamic Island khi mở PWA độc lập.
+- Sửa việc dùng visualViewport.height cho toàn bộ màn hình; chỉ dùng khi bàn phím ảo thực sự mở, tránh khoảng trống dưới dock.
+- Tinh chỉnh khung xem trước để giữ trọn ảnh nhưng bỏ nền caro lớn, giảm bóng và tăng cảm giác gọn gàng.
+- Thanh công cụ gần mép đáy an toàn hơn, nhãn Xuất có tương phản rõ trên nền sáng.
+- Không đụng logic chỉnh ảnh, xuất ảnh gốc, công thức, IndexedDB và chức năng Lưu vào Ảnh.
+- Chưa thực hiện đo trực tiếp các tọa độ và safe area trên Safari/iPhone thực tế. Duy trì giới hạn này trong báo cáo kiểm thử.
