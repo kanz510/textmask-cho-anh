@@ -276,8 +276,8 @@
         * { transition: none !important; }
       }
     </style>
-    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-10" />
-    <link rel="stylesheet" href="./batch-workspace.css?v=20261113-10" />
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-11" />
+    <link rel="stylesheet" href="./batch-workspace.css?v=20261113-11" />
   </head>
   <body>
     <div class="wrap">
@@ -317,18 +317,7 @@
             <button class="btn" id="demoBtn" type="button">Dùng ảnh mẫu</button>
             <label class="btn" for="batchInput">Chọn nhiều ảnh</label>
             <input type="file" id="batchInput" accept="image/*" multiple hidden />
-            <span class="img-info" id="imgInfo"></span>
-          </div>
-          <div class="export-row">
-            <button class="btn primary" id="dlPng" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Tải ảnh PNG
-            </button>
-            <button class="btn" id="dlJpg" type="button">Tải ảnh JPG</button>
-            <button class="btn" id="desktopApplyAll" type="button" disabled>Áp dụng chung cho tất cả ảnh</button>
-            <button class="btn" id="batchDl" type="button" disabled>Tạo bộ ảnh ZIP (PNG)</button>
-            <a class="btn primary" id="desktopZipReadyLink" hidden>Tải ZIP vừa tạo</a>
-            <span class="img-info" id="batchInfo"></span>
+            <span class="img-info" id="imgInfo"></span><span id="batchInfo" hidden></span>
           </div>
         </section>
 
@@ -1230,8 +1219,6 @@
           toast("Đã tải ảnh " + kind.toUpperCase() + " (" + state.imgW + " × " + state.imgH + " px)");
         }, mime, 0.92);
       }
-      document.getElementById("dlPng").addEventListener("click", function () { exportImage("png"); });
-      document.getElementById("dlJpg").addEventListener("click", function () { exportImage("jpg"); });
 
       /* ================= Init ================= */
       var demo = makeDemoImage();
@@ -1241,7 +1228,7 @@
         document.fonts.ready.then(function () { render(); refreshThumbs(); });
       }
     </script>
-    <script src="./mobile-ui.js?v=20261113-10"></script>
-    <script src="./batch-workspace.js?v=20261113-10"></script>
+    <script src="./mobile-ui.js?v=20261113-11"></script>
+    <script src="./batch-workspace.js?v=20261113-11"></script>
   </body>
 </html>

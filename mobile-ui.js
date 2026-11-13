@@ -34,7 +34,7 @@
     text: { title: "Chữ & phông", sub: "Nhập nội dung và chọn kiểu chữ" },
     style: { title: "Kiểu phủ", sub: "Bố cục, mẫu và hiệu ứng" },
     adjust: { title: "Tinh chỉnh", sub: "Cỡ chữ, độ mờ, màu sắc và logo" },
-    export: { title: "Xuất ảnh", sub: "Lưu ảnh đúng độ phân giải gốc" },
+    export: { title: "Ảnh đã sửa", sub: "Chọn ảnh để tải riêng hoặc lưu vào Ảnh" },
     batch: { title: "Ảnh đã tải lên", sub: "Danh sách chờ · Áp dụng chung · Công thức đã lưu" },
     more: { title: "Thêm công cụ", sub: "Ảnh mẫu và chỉnh hàng loạt" }
   };
@@ -56,123 +56,56 @@
 
   var exportSection = document.createElement("section");
   exportSection.id = "mobileExportSection";
-  exportSection.className = "sheet-section";
+  exportSection.className = "sheet-section edited-exports";
   exportSection.hidden = true;
   exportSection.innerHTML =
-    '<p class="sheet-note">Ảnh được xử lý trên thiết bị và xuất ở kích thước gốc, không phải bản xem trước.</p>' +
-    '<div class="sheet-actions">' +
-    '<button type="button" class="btn primary wide photos-share" id="saveToPhotos" aria-describedby="saveToPhotosHint">▣ Lưu vào Ảnh</button>' +
-    '<p class="sheet-note photos-share-hint" id="saveToPhotosHint">Trên iPhone, chọn “Lưu hình ảnh” trong bảng chia sẻ để lưu vào album.</p>' +
-    '<button type="button" class="btn" data-proxy="dlPng">↓ Tải PNG</button>' +
-    '<button type="button" class="btn" data-proxy="dlJpg">↓ Tải JPG</button>' +
-    '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
-    '</div><span class="img-info" id="mobileBatchInfo">Chưa chọn ảnh hàng loạt</span>';
+    '<p class="sheet-note">Chọn một ảnh đã áp dụng công thức, sau đó tải riêng ảnh đó về máy.</p>' +
+    '<div class="export-edited-heading"><strong>Ảnh đã sửa <span id="exportEditedCount">0 ảnh</span></strong></div>' +
+    '<div class="edited-photos-grid" id="exportEditedGrid" role="group" aria-label="Chọn ảnh đã sửa để tải"></div>' +
+    '<p id="exportEditedEmpty" class="batch-empty">Chưa có ảnh đã sửa. Vào Nhiều ảnh → Áp dụng chung để chọn công thức đã lưu.</p>' +
+    '<div id="exportSelectedPanel" class="export-selected-panel" hidden>' +
+      '<strong id="exportSelectedName">Ảnh đã chọn</strong>' +
+      '<p id="exportPrepStatus" role="status" aria-live="polite">Chọn ảnh để chuẩn bị tải.</p>' +
+      '<a id="exportSelectedDownload" class="btn primary export-download" hidden>↓ Tải ảnh đã chọn</a>' +
+      '<button type="button" id="exportSelectedShare" class="btn export-share" disabled>▣ Lưu vào Ảnh</button>' +
+      '<small>Trên iPhone, chọn “Lưu hình ảnh” trong bảng chia sẻ.</small>' +
+    '</div>' +
+    '<button type="button" class="btn" data-open-batch>▦ Quản lý ảnh đã tải lên</button>';
   panel.appendChild(exportSection);
   var batchSection = document.createElement("section");
   batchSection.className = "sheet-section batch-workflow";
   batchSection.id = "mobileBatchSection";
   batchSection.hidden = true;
   batchSection.innerHTML =
-    '<p class="sheet-note">Ảnh tải lên sẽ ở danh sách chờ. Bạn chỉnh công thức một lần rồi áp dụng cho tất cả ảnh.</p>' +
-    '<div class="batch-library-top"><strong>Đã tải lên <span id="batchQueueCount">0 ảnh</span></strong><button class="btn batch-small" type="button" id="batchClearQueue">Xoá tất cả</button></div>' +
+    '<div class="batch-library-top">' +
+      '<strong>Đã tải lên <span id="batchQueueCount">0 ảnh</span></strong>' +
+      '<div class="batch-top-actions"><button type="button" class="btn batch-quick-apply" id="batchApplyChooser" disabled>✓ Áp dụng chung</button>' +
+        '<button class="btn batch-small" type="button" id="batchClearQueue">Xoá tất cả</button></div>' +
+    '</div>' +
     '<button type="button" class="btn primary batch-pick" data-input="batchInput">＋ Tải thêm nhiều ảnh</button>' +
     '<div id="batchUploadQueue" class="batch-upload-queue" aria-label="Danh sách ảnh đã tải lên"></div>' +
     '<p class="batch-empty" id="batchQueueEmpty">Chưa có ảnh nào. Hãy tải ảnh lên để bắt đầu.</p>' +
     '<p class="batch-status" id="batchSelectedStatus" aria-live="polite">Chưa chọn ảnh nào</p>' +
-    '<p class="sheet-note batch-storage-note" id="batchStorageNotice">Ảnh nằm chờ trong bộ nhớ của thiết bị, không gửi lên máy chủ.</p>' +
-    '<div class="batch-settings"><strong>Công thức đang chỉnh</strong><p id="batchSettingsSummary"></p>' +
-    '<small>Chỉnh trong tab Chữ, Kiểu, Chỉnh. Bấm Áp dụng để chốt công thức lên tất cả ảnh.</small></div>' +
-    '<button type="button" class="btn primary batch-apply" id="batchApplyAll" disabled>✓ Áp dụng công thức cho tất cả ảnh</button>' +
     '<p id="batchAppliedStatus" class="batch-applied-status" role="status" aria-live="polite">Chưa áp dụng công thức</p>' +
-    '<button type="button" class="btn batch-download" id="batchApplyDownload" data-proxy="batchDl" disabled>↓ Tạo bộ ảnh ZIP (PNG)</button>' +
-    '<a class="btn primary batch-zip-ready" id="batchZipReadyLink" hidden>Tải ZIP vừa tạo</a>' +
-    '<div class="batch-formula-library"><strong>Lưu và dùng lại công thức</strong>' +
-    '<input id="batchRecipeName" class="text-input" type="text" maxlength="50" placeholder="Tên công thức..." aria-label="Tên công thức cần lưu"/>' +
-    '<button type="button" class="btn" id="batchRecipeSave">Lưu công thức hiện tại</button>' +
-    '<select id="batchRecipeSelect" class="text-input" aria-label="Chọn công thức đã lưu"><option value="">Chọn công thức đã lưu</option></select>' +
-    '<button type="button" class="btn" id="batchRecipeUse">Dùng công thức đã lưu</button></div>' +
-    '<p class="sheet-note">Tải một ZIP chứa các PNG ở kích thước gốc, sau đó giải nén trong ứng dụng Tệp trên iPhone.</p>';
+    '<p class="sheet-note batch-storage-note" id="batchStorageNotice">Ảnh nằm chờ trong bộ nhớ của thiết bị, không gửi lên máy chủ.</p>' +
+    '<div class="batch-formula-library"><strong>Kho công thức đã lưu</strong>' +
+      '<p class="sheet-note">Tạo công thức trong tab Chỉnh → Kho công thức, sau đó bấm Áp dụng chung ở phía trên.</p>' +
+      '<input id="batchRecipeName" class="text-input" type="text" maxlength="50" placeholder="Tên công thức mới..." aria-label="Tên công thức cần lưu"/>' +
+      '<button type="button" class="btn" id="batchRecipeSave">Lưu công thức hiện tại</button>' +
+      '<select id="batchRecipeSelect" class="text-input" aria-label="Chọn công thức đã lưu"><option value="">Chọn công thức đã lưu</option></select>' +
+      '<button type="button" class="btn" id="batchRecipeUse">Dùng công thức để chỉnh mẫu hiện tại</button>' +
+    '</div>' +
+    '<div id="batchRecipePicker" class="recipe-picker-overlay" hidden>' +
+      '<div class="recipe-picker-card" role="dialog" aria-modal="true" aria-labelledby="recipePickerTitle">' +
+        '<div class="recipe-picker-heading"><strong id="recipePickerTitle">Áp dụng công thức chung</strong>' +
+          '<button type="button" id="recipePickerClose" aria-label="Đóng" class="recipe-picker-x">×</button></div>' +
+        '<p>Chọn một công thức đã lưu để áp dụng cho toàn bộ ảnh trong danh sách chờ.</p>' +
+        '<div id="batchRecipeChoices" class="recipe-picker-options" role="group" aria-label="Công thức đã lưu"></div>' +
+        '<p id="recipePickerEmpty" class="recipe-picker-empty" hidden>Chưa có công thức nào. Vào Chỉnh → Kho công thức để lưu công thức trước.</p>' +
+        '<button type="button" class="btn primary recipe-picker-confirm" id="batchConfirmApply" disabled>Áp dụng cho tất cả ảnh</button>' +
+      '</div>' +
+    '</div>';
   panel.appendChild(batchSection);
-
-  /* Share the original-resolution PNG, not the reduced preview canvas.
-     PNG conversion is synchronous so the native share call remains inside
-     Safari's user-gesture handler (toBlob's async callback can lose activation). */
-  var saveToPhotosButton = document.getElementById("saveToPhotos");
-  function createSharePngFile() {
-    var out = document.createElement("canvas");
-    try {
-      renderTo(out, state.imgW, state.imgH);
-      var dataUrl = out.toDataURL("image/png");
-      var prefix = "data:image/png;base64,";
-      if (dataUrl.slice(0, prefix.length) !== prefix) {
-        throw new Error("Không thể tạo file PNG");
-      }
-      var binary = atob(dataUrl.slice(prefix.length));
-      var chunks = [];
-      // Chunk conversion avoids an extra enormous typed-array allocation.
-      for (var start = 0; start < binary.length; start += 32768) {
-        var part = binary.slice(start, start + 32768);
-        var bytes = new Uint8Array(part.length);
-        for (var i = 0; i < part.length; i++) bytes[i] = part.charCodeAt(i);
-        chunks.push(bytes);
-      }
-      var base = (state.imgName || "anh").replace(/[\\/:*?"<>|\x00-\x1f]/g, "-").slice(0, 70);
-      return new File(chunks, "textmask-" + base + ".png", { type: "image/png" });
-    } finally {
-      out.width = 0;
-      out.height = 0;
-    }
-  }
-
-  function saveToPhotos() {
-    if (saveToPhotosButton.disabled) return;
-    if (!state.img) {
-      toast("Hãy chọn ảnh trước khi lưu.");
-      return;
-    }
-    if (typeof navigator.share !== "function" || typeof File !== "function") {
-      toast("Trình duyệt chưa hỗ trợ chia sẻ ảnh. Hãy dùng Tải PNG.");
-      return;
-    }
-    saveToPhotosButton.disabled = true;
-    saveToPhotosButton.setAttribute("aria-busy", "true");
-
-    var file;
-    try {
-      file = createSharePngFile();
-      var shareData = { files: [file] };
-      if (typeof navigator.canShare === "function" && !navigator.canShare(shareData)) {
-        toast("Trình duyệt không hỗ trợ chia sẻ file ảnh. Hãy dùng Tải PNG.");
-        saveToPhotosButton.disabled = false;
-        saveToPhotosButton.removeAttribute("aria-busy");
-        return;
-      }
-      // Do not await any operation before navigator.share: Safari needs a user gesture.
-      var shareResult = navigator.share(shareData);
-      toast("Trong bảng chia sẻ, chọn “Lưu hình ảnh” để lưu vào album.");
-      Promise.resolve(shareResult).catch(function (error) {
-        if (error && error.name === "AbortError") return; // User cancelled.
-        if (error && error.name === "NotAllowedError") {
-          toast("Safari không cho phép chia sẻ lúc này. Thử lại hoặc dùng Tải PNG.");
-        } else {
-          toast("Chia sẻ chưa thành công. Bạn có thể dùng Tải PNG.");
-        }
-      }).then(function () {
-        saveToPhotosButton.disabled = false;
-        saveToPhotosButton.removeAttribute("aria-busy");
-      });
-    } catch (error) {
-      saveToPhotosButton.disabled = false;
-      saveToPhotosButton.removeAttribute("aria-busy");
-      if (error && error.name === "NotAllowedError") {
-        toast("Safari không cho phép chia sẻ lúc này. Thử lại hoặc dùng Tải PNG.");
-      } else {
-        toast("Không tạo được file để chia sẻ. Hãy dùng Tải PNG.");
-      }
-    }
-  }
-  saveToPhotosButton.addEventListener("click", saveToPhotos);
-
 
   var moreSection = document.createElement("section");
   moreSection.id = "mobileMoreSection";
@@ -190,36 +123,12 @@
   var title = document.getElementById("mobileSheetTitle");
   var subtitle = document.getElementById("mobileSheetSubtitle");
   var tabButtons = Array.prototype.slice.call(dock.querySelectorAll("[data-mobile-tab]"));
-  var originalBatch = document.getElementById("batchDl");
-  var originalBatchInfo = document.getElementById("batchInfo");
-  var batchApply = document.getElementById("batchApplyDownload");
-  var batchStatus = document.getElementById("batchSelectedStatus");
-  var batchSummary = document.getElementById("batchSettingsSummary");
-
-  // The canvas dimensions and renderer are unchanged; only the status label is rehomed.
+  // Status and completed-image previews are managed by batch-workspace.js.
   var imgInfo = document.getElementById("imgInfo");
   if (imgInfo) stage.appendChild(imgInfo);
-
   function syncBatch() {
-    batchApply.disabled = originalBatch.disabled;
-    var msg = originalBatchInfo.textContent || "Chưa chọn ảnh nào";
-    batchStatus.textContent = msg;
-    var match = msg.match(/Đã chọn\s+(\d+)\s+ảnh/);
-    batchCount.hidden = !match;
-    batchCount.textContent = match ? match[1] : "";
-    var watermark = document.getElementById("textInput").value.trim() || "Watermark";
-    batchSummary.textContent = "“" + watermark + "” · " +
-      document.getElementById("styleName").textContent + " · " +
-      document.getElementById("gapVal").textContent;
+    // Kept as a stable hook when returning to the uploaded-photos sheet.
   }
-  if (originalBatch) {
-    new MutationObserver(syncBatch).observe(originalBatch, { attributes: true, attributeFilter: ["disabled"] });
-  }
-  if (originalBatchInfo) {
-    new MutationObserver(syncBatch).observe(originalBatchInfo, { childList: true, characterData: true, subtree: true });
-  }
-  syncBatch();
-
   function resetTabs() {
     tabButtons.forEach(function (button) {
       button.setAttribute("aria-expanded", button.dataset.mobileTab === activeGroup && document.body.classList.contains("sheet-open") ? "true" : "false");
@@ -252,6 +161,7 @@
     if (group === "batch") syncBatch();
     resetTabs();
     closeButton.focus({ preventScroll: true });
+    if (group === "export") window.dispatchEvent(new Event("textmask:export-open"));
   }
   function closeSheet() {
     if (!mq.matches) return;

@@ -1,4 +1,4 @@
-/* Textmask Studio V10: IndexedDB image queue, shared recipes, one ZIP download. */
+/* Textmask Studio V11: saved-recipe batch apply and per-photo export. */
 (function () {
   "use strict";
   if (!window.state || !window.renderTo || !window.setImage) return;
@@ -8,28 +8,52 @@
   var db = null;
   var queueSelected = null;
   var busy = false;
-  var preparedZipUrl = null;
-  var zipLinks = [document.getElementById("batchZipReadyLink"),document.getElementById("desktopZipReadyLink")];
-  var desktopApply = document.getElementById("desktopApplyAll");
-  function clearPreparedZip() {
-    if (preparedZipUrl) URL.revokeObjectURL(preparedZipUrl);
-    preparedZipUrl = null;
-    zipLinks.forEach(function (link) {
-      if (!link) return;
-      link.hidden = true;
-      link.removeAttribute("href");
-    });
+  var exportSelectedId = null;
+  var exportBlobUrl = null;
+  var exportBlob = null;
+  var exportTicket = 0;
+  var galleryTicket = 0;
+  var pickerSelectedRecipe = "";
+  var chooserTrigger = null;
+  function resetExportBlob() {
+    exportTicket++;
+    if (exportBlobUrl) URL.revokeObjectURL(exportBlobUrl);
+    exportBlobUrl = null;
+    exportBlob = null;
+    var link = document.getElementById("exportSelectedDownload");
+    var share = document.getElementById("exportSelectedShare");
+    if (link) { link.hidden = true; link.removeAttribute("href"); }
+    if (share) share.disabled = true;
+  }
+  function clearPhotoThumb(item) {
+    item.thumbRevision = (item.thumbRevision || 0) + 1;
+    if (item.editedThumbUrl) URL.revokeObjectURL(item.editedThumbUrl);
+    item.editedThumbUrl = null;
+    item.thumbPromise = null;
   }
   var persistenceError = false;
   var dbName = "textmask-workspace-v1";
   var recipeFallbackKey = "textmask-saved-recipes-v1";
   var photoInput = document.getElementById("batchInput");
   var statusEl = document.getElementById("batchInfo");
-  var exportBtn = document.getElementById("batchDl");
   var uploadGrid = document.getElementById("batchUploadQueue");
   var queueEmpty = document.getElementById("batchQueueEmpty");
   var queueCount = document.getElementById("batchQueueCount");
-  var batchApply = document.getElementById("batchApplyAll");
+  var quickApply = document.getElementById("batchApplyChooser");
+  var picker = document.getElementById("batchRecipePicker");
+  var pickerChoices = document.getElementById("batchRecipeChoices");
+  var pickerEmpty = document.getElementById("recipePickerEmpty");
+  var pickerConfirm = document.getElementById("batchConfirmApply");
+  var pickerClose = document.getElementById("recipePickerClose");
+  var exportGrid = document.getElementById("exportEditedGrid");
+  var exportEmpty = document.getElementById("exportEditedEmpty");
+  var exportCount = document.getElementById("exportEditedCount");
+  var exportPanel = document.getElementById("exportSelectedPanel");
+  var exportName = document.getElementById("exportSelectedName");
+  var exportPrep = document.getElementById("exportPrepStatus");
+  var exportDownload = document.getElementById("exportSelectedDownload");
+  var exportShare = document.getElementById("exportSelectedShare");
+  var batchBadge = document.getElementById("mobileBatchCount");
   var appliedStatus = document.getElementById("batchAppliedStatus");
   var queueNotice = document.getElementById("batchStorageNotice");
   var clearBtn = document.getElementById("batchClearQueue");
@@ -102,6 +126,7 @@
   }
   function dropPhoto(item) {
     if (item.url) URL.revokeObjectURL(item.url);
+    clearPhotoThumb(item);
     if (!db) return Promise.resolve();
     return promiseStore("photos","delete",item.id).catch(function () {
       persistenceError = true; storageWarning();
@@ -159,19 +184,22 @@
     window.state.batch = queue;
     queueCount.textContent = total + " ảnh";
     if (queueEmpty) queueEmpty.hidden = total > 0;
-    if (batchApply) batchApply.disabled = !total || busy;
-    if (desktopApply) desktopApply.disabled = !total || busy;
+    if (quickApply) quickApply.disabled = !total || busy;
+    if (batchBadge) {
+      batchBadge.hidden = !total;
+      batchBadge.textContent = String(total);
+    }
     if (clearBtn) clearBtn.disabled = !total || busy;
-    exportBtn.disabled = !total || busy || applied !== total;
     if (appliedStatus) {
       appliedStatus.textContent = !total ? "Danh sách đang trống"
-        : applied === total ? "✓ Đã áp dụng cho " + total + " ảnh. Có thể xuất ZIP."
+        : applied === total ? "✓ Đã áp dụng cho " + total + " ảnh. Xem và tải riêng trong tab Xuất."
         : "Đã áp dụng " + applied + "/" + total + " ảnh · " + (total - applied) + " ảnh còn chờ.";
     }
     statusEl.textContent = total
       ? "Đã chọn " + total + " ảnh · " + applied + " đã áp dụng"
       : "Chưa chọn ảnh nào";
     storageWarning();
+    renderEditedGallery();
   }
   function findPhoto(id) {
     return queue.find(function (p) { return p.id === id; });
@@ -199,7 +227,7 @@
   }
   async function addPhotos(fileList) {
     if (busy) return;
-    clearPreparedZip();
+    resetExportBlob();
     var files = Array.prototype.slice.call(fileList || []).filter(function (file) { return /^image\//.test(file.type); });
     if (!files.length) { notify("Hãy chọn ít nhất một ảnh."); return; }
     var first = queue.length === 0;
@@ -222,7 +250,7 @@
     if (busy) return;
     var item = findPhoto(id);
     if (!item) return;
-    clearPreparedZip();
+    resetExportBlob();
     queue = queue.filter(function (p) { return p.id !== id; });
     if (queueSelected === id) queueSelected = null;
     await dropPhoto(item);
@@ -236,8 +264,8 @@
   async function clearQueue() {
     if (!queue.length || busy) return;
     if (!window.confirm("Xoá toàn bộ ảnh đang chờ khỏi thiết bị? Công thức đã lưu vẫn được giữ.")) return;
-    clearPreparedZip();
-    queue.forEach(function (item) { if (item.url) URL.revokeObjectURL(item.url); });
+    resetExportBlob();
+    queue.forEach(function (item) { if (item.url) URL.revokeObjectURL(item.url); clearPhotoThumb(item); });
     queue=[];
     queueSelected=null;
     if (db) {
@@ -348,20 +376,60 @@
     applyState(recipe,image);
     syncEditor();
   }
-  async function applyAll() {
+  function renderRecipePicker() {
+    if (!picker || picker.hidden) return;
+    pickerChoices.textContent = "";
+    savedRecipes.forEach(function (item) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "recipe-picker-option" + (pickerSelectedRecipe === item.name ? " selected" : "");
+      button.dataset.recipePick = item.name;
+      button.setAttribute("aria-pressed",pickerSelectedRecipe === item.name ? "true" : "false");
+      var label = document.createElement("strong");
+      label.textContent = item.name;
+      var detail = document.createElement("small");
+      var config = item.config || {};
+      detail.textContent = "“" + (config.text || "Watermark") + "” · " + (config.style || "grid");
+      button.appendChild(label);button.appendChild(detail);
+      pickerChoices.appendChild(button);
+    });
+    pickerEmpty.hidden = savedRecipes.length > 0;
+    pickerConfirm.disabled = busy || !pickerSelectedRecipe || !findRecipe(pickerSelectedRecipe);
+  }
+  function openRecipePicker() {
+    if (busy || !queue.length) return;
+    chooserTrigger = document.activeElement;
+    pickerSelectedRecipe = "";
+    picker.hidden = false;
+    renderRecipePicker();
+    pickerClose.focus({preventScroll:true});
+  }
+  function closeRecipePicker() {
+    picker.hidden = true;
+    pickerSelectedRecipe = "";
+    if (chooserTrigger && chooserTrigger.isConnected) chooserTrigger.focus({preventScroll:true});
+  }
+  async function applySavedRecipeToAll(name) {
     if (!queue.length || busy) return;
-    clearPreparedZip();
-    var recipe;
-    try { recipe=captureRecipe(); }
-    catch (error) { notify(error.message); return; }
+    var saved = findRecipe(name);
+    if (!saved || !saved.config) { notify("Hãy chọn một công thức đã lưu."); return; }
     busy=true;updateQueue();
+    pickerConfirm.disabled = true;
+    resetExportBlob();
     try {
-      queue.forEach(function (item) { item.applied=Object.assign({},recipe); });
+      // The selected recipe is fixed onto every queued image. Later slider changes
+      // cannot silently alter a completed photo.
+      await useRecipe(saved.config);
+      queue.forEach(function (item) {
+        clearPhotoThumb(item);
+        item.applied = JSON.parse(JSON.stringify(saved.config));
+      });
       await Promise.all(queue.map(persistPhoto));
-      notify("Đã áp dụng cùng một công thức cho " + queue.length + " ảnh.");
+      notify("Đã áp dụng công thức “" + saved.name + "” cho " + queue.length + " ảnh.");
+      closeRecipePicker();
     } catch (error) {
-      notify("Không thể lưu công thức vào hàng chờ.");
-    } finally { busy=false;updateQueue(); }
+      notify("Áp dụng không thành công: " + (error.message || "Hãy thử lại."));
+    } finally { busy=false; updateQueue(); }
   }
   function readFallbackRecipes() {
     try {
@@ -391,6 +459,7 @@
     var empty=!savedRecipes.length;
     loadButtons.forEach(function (btn) { if (btn) btn.disabled=empty; });
     if (deleteBtn) deleteBtn.disabled=empty;
+    renderRecipePicker();
   }
   function findRecipe(name) {
     return savedRecipes.find(function (r) { return r.name===name; });
@@ -440,70 +509,6 @@
     updateSavedLists("");
     if (recipeStatus) recipeStatus.textContent="Đã xoá công thức “"+name+"”.";
   }
-  var crcTable=(function () {
-    var table=[];
-    for (var i=0;i<256;i++) {
-      var v=i;
-      for (var j=0;j<8;j++) v=(v&1)?(0xedb88320^(v>>>1)):(v>>>1);
-      table.push(v>>>0);
-    }
-    return table;
-  })();
-  function crc32(bytes) {
-    var crc=0xffffffff;
-    for(var i=0;i<bytes.length;i++) crc=(crc>>>8)^crcTable[(crc^bytes[i])&255];
-    return (crc^0xffffffff)>>>0;
-  }
-  function zipHeader(length) {return new Uint8Array(length);}
-  function fileDate() {
-    var d=new Date();
-    return {time:(d.getHours()<<11)|(d.getMinutes()<<5)|Math.floor(d.getSeconds()/2),
-      date:((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate()};
-  }
-  function uniqueFilenames(items) {
-    var used=Object.create(null);
-    return items.map(function (item) {
-      var name=safeName(item.name);
-      var key=name.toLowerCase();
-      used[key]=(used[key]||0)+1;
-      return "textmask-"+name+(used[key]>1?"-"+used[key]:"")+".png";
-    });
-  }
-  async function packZip(files) {
-    var parts=[], central=[], offset=0;
-    var enc=new TextEncoder();
-    var date=fileDate();
-    for(var i=0;i<files.length;i++) {
-      var entry=files[i];
-      var bytes=new Uint8Array(await entry.blob.arrayBuffer());
-      var fileName=enc.encode(entry.name);
-      if (bytes.length>0xffffffff || offset>0xffffffff) throw new Error("Bộ ảnh quá lớn để tạo ZIP trên điện thoại.");
-      var check=crc32(bytes);
-      var local=zipHeader(30+fileName.length),ld=new DataView(local.buffer);
-      ld.setUint32(0,0x04034b50,true);ld.setUint16(4,20,true);ld.setUint16(6,0x0800,true);
-      ld.setUint16(8,0,true);ld.setUint16(10,date.time,true);ld.setUint16(12,date.date,true);
-      ld.setUint32(14,check,true);ld.setUint32(18,bytes.length,true);ld.setUint32(22,bytes.length,true);
-      ld.setUint16(26,fileName.length,true);ld.setUint16(28,0,true);local.set(fileName,30);
-      parts.push(local,entry.blob);
-      var dir=zipHeader(46+fileName.length),dv=new DataView(dir.buffer);
-      dv.setUint32(0,0x02014b50,true);dv.setUint16(4,20,true);dv.setUint16(6,20,true);
-      dv.setUint16(8,0x0800,true);dv.setUint16(10,0,true);
-      dv.setUint16(12,date.time,true);dv.setUint16(14,date.date,true);
-      dv.setUint32(16,check,true);dv.setUint32(20,bytes.length,true);dv.setUint32(24,bytes.length,true);
-      dv.setUint16(28,fileName.length,true);dv.setUint16(30,0,true);dv.setUint16(32,0,true);
-      dv.setUint16(34,0,true);dv.setUint16(36,0,true);dv.setUint32(38,0,true);dv.setUint32(42,offset,true);
-      dir.set(fileName,46);central.push(dir);
-      offset+=local.length+bytes.length;
-    }
-    var directorySize=central.reduce(function (n,p) {return n+p.length;},0);
-    if (offset+directorySize>0xffffffff || files.length>65535)
-      throw new Error("Bộ ảnh quá lớn, hãy chia thành nhiều lượt.");
-    var end=zipHeader(22),ev=new DataView(end.buffer);
-    ev.setUint32(0,0x06054b50,true);ev.setUint16(4,0,true);ev.setUint16(6,0,true);
-    ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);
-    ev.setUint32(12,directorySize,true);ev.setUint32(16,offset,true);ev.setUint16(20,0,true);
-    return new Blob(parts.concat(central,[end]),{type:"application/zip"});
-  }
   async function renderPhoto(item) {
     var image=await loadPicture(item.file);
     var recipe=item.applied;
@@ -528,49 +533,167 @@
       },"image/png");
     });
   }
-  async function downloadAll() {
-    if (busy || !queue.length) return;
-    if(queue.some(function(item){return !item.applied;})) {
-      notify("Còn ảnh chưa áp dụng. Hãy bấm Áp dụng công thức cho tất cả trước.");return;
-    }
-    busy=true;updateQueue();
-    var output=[];
-    try {
-      var names=uniqueFilenames(queue);
-      for(var i=0;i<queue.length;i++) {
-        if (appliedStatus) appliedStatus.textContent="Đang xuất PNG "+(i+1)+"/"+queue.length+"…";
-        var blob=await renderPhoto(queue[i]);
-        output.push({name:names[i],blob:blob});
-        // Avoid excessive peak memory usage on Safari.
-        var size=output.reduce(function(n,e){return n+e.blob.size;},0);
-        if(size>350*1024*1024)throw new Error("Bộ ảnh vượt 350 MB. Hãy chia thành nhiều lượt trên iPhone.");
-      }
-      if (appliedStatus) appliedStatus.textContent="Đang đóng gói ZIP…";
-      var zip=await packZip(output);
-      clearPreparedZip();
-      preparedZipUrl=URL.createObjectURL(zip);
-      var name="textmask-bo-anh-"+new Date().toISOString().slice(0,10)+".zip";
-      zipLinks.forEach(function (link) {
-        if (!link) return;
-        link.href=preparedZipUrl;
-        link.download=name;
-        link.hidden=false;
-        link.textContent="↓ Tải ZIP vừa tạo ("+output.length+" ảnh)";
-      });
-      notify("ZIP đã sẵn sàng. Chạm “Tải ZIP vừa tạo” để lưu vào Tệp trên iPhone.");
-    } catch(error) {
-      notify("Xuất ảnh thất bại: "+(error&&error.message?error.message:"Hãy thử ít ảnh hơn."));
-    } finally {busy=false;output=[];updateQueue();}
+
+  function completedPhotos() {
+    return queue.filter(function (item) { return !!item.applied; });
   }
+  async function createEditedThumbnail(item) {
+    if (!item.applied) return null;
+    if (item.editedThumbUrl) return item.editedThumbUrl;
+    if (item.thumbPromise) return item.thumbPromise;
+    var recipe=item.applied;
+    var revision=item.thumbRevision || 0;
+    item.thumbPromise=(async function() {
+      var image=await loadPicture(item.file);
+      var logo=await getLogo(recipe);
+      var font=window.fontById(recipe.font);
+      if(document.fonts&&document.fonts.load) {
+        try {await document.fonts.load(font.weight+" 16px "+font.stack);}catch(error){}
+      }
+      if(item.applied!==recipe || item.thumbRevision!==revision) return null;
+      var ratio=Math.min(1,340/Math.max(image.naturalWidth,image.naturalHeight));
+      var canvas=document.createElement("canvas"),before=snapshotState();
+      try {
+        applyState(recipe,logo);
+        window.renderTo(canvas,Math.max(1,Math.round(image.naturalWidth*ratio)),
+          Math.max(1,Math.round(image.naturalHeight*ratio)),image);
+      } finally {Object.assign(window.state,before);}
+      var blob=await new Promise(function(resolve){canvas.toBlob(resolve,"image/png");});
+      canvas.width=0;canvas.height=0;
+      if(!blob || item.applied!==recipe || item.thumbRevision!==revision) return null;
+      item.editedThumbUrl=URL.createObjectURL(blob);
+      return item.editedThumbUrl;
+    })().catch(function(){return null;}).then(function(value) {
+      item.thumbPromise=null;
+      return value;
+    });
+    return item.thumbPromise;
+  }
+  function renderEditedGallery() {
+    if(!exportGrid) return;
+    var edited=completedPhotos();
+    exportCount.textContent=edited.length+" ảnh";
+    exportEmpty.hidden=edited.length>0;
+    if(!edited.length) {
+      exportSelectedId=null;
+      resetExportBlob();
+      exportPanel.hidden=true;
+    } else {
+      if(!edited.some(function(item){return item.id===exportSelectedId;})) {
+        exportSelectedId=edited[0].id;
+        resetExportBlob();
+      }
+      exportPanel.hidden=false;
+      exportName.textContent=findPhoto(exportSelectedId).name;
+    }
+    exportGrid.textContent="";
+    var tasks=[];
+    edited.forEach(function(item) {
+      var card=document.createElement("button");
+      card.type="button";
+      card.className="edited-photo-card"+(item.id===exportSelectedId?" is-selected":"");
+      card.dataset.exportPick=item.id;
+      card.setAttribute("aria-pressed",item.id===exportSelectedId?"true":"false");
+      card.setAttribute("aria-label","Chọn ảnh đã sửa: "+item.name);
+      var img=document.createElement("img");
+      img.alt="";img.loading="lazy";img.src=item.editedThumbUrl||item.url;
+      var name=document.createElement("strong");name.textContent=item.name;
+      var mark=document.createElement("span");mark.className="edited-photo-marker";mark.textContent="✓ Đã áp dụng";
+      card.appendChild(img);card.appendChild(name);card.appendChild(mark);
+      exportGrid.appendChild(card);
+      if(!item.editedThumbUrl) tasks.push({item:item,img:img});
+    });
+    if(busy) return;
+    var run=++galleryTicket;
+    (async function(){
+      for(var i=0;i<tasks.length;i++) {
+        if(run!==galleryTicket)return;
+        var task=tasks[i],url=await createEditedThumbnail(task.item);
+        if(run===galleryTicket && url && task.img.isConnected && task.item.applied)
+          task.img.src=url;
+      }
+    })();
+  }
+  async function prepareSelectedImage() {
+    var item=findPhoto(exportSelectedId);
+    if(!item || !item.applied || busy)return;
+    if(exportBlob && exportBlobUrl && exportDownload.getAttribute("href")===exportBlobUrl)return;
+    resetExportBlob();
+    var ticket=exportTicket,id=item.id;
+    exportName.textContent=item.name;
+    exportPrep.textContent="Đang chuẩn bị ảnh ở độ phân giải gốc…";
+    try {
+      var blob=await renderPhoto(item);
+      if(ticket!==exportTicket || id!==exportSelectedId || !findPhoto(id))return;
+      exportBlob=blob;
+      exportBlobUrl=URL.createObjectURL(blob);
+      exportDownload.href=exportBlobUrl;
+      exportDownload.download="textmask-"+safeName(item.name)+".png";
+      exportDownload.hidden=false;
+      exportShare.disabled=!(typeof navigator.share==="function" && typeof File==="function");
+      exportPrep.textContent="✓ Ảnh đã sẵn sàng. Chạm Tải ảnh đã chọn.";
+    }catch(error) {
+      if(ticket!==exportTicket)return;
+      exportPrep.textContent="Không tạo được ảnh: "+(error.message||"Thử lại.");
+    }
+  }
+  function chooseEditedPhoto(id) {
+    var item=findPhoto(id);
+    if(!item || !item.applied)return;
+    if(exportSelectedId!==id){exportSelectedId=id;resetExportBlob();}
+    renderEditedGallery();
+    prepareSelectedImage();
+  }
+  function shareSelectedImage() {
+    if(!exportBlob || exportShare.disabled)return;
+    try {
+      // iOS needs the share call during this real tap, not after an await.
+      var item=findPhoto(exportSelectedId);
+      var file=new File([exportBlob],"textmask-"+safeName(item.name)+".png",{type:"image/png"});
+      var data={files:[file]};
+      if(navigator.canShare && !navigator.canShare(data)) {
+        notify("Safari không chia sẻ được ảnh này. Hãy bấm Tải ảnh đã chọn.");
+        return;
+      }
+      Promise.resolve(navigator.share(data)).catch(function(error){
+        if(error && error.name!=="AbortError")
+          notify("Không thể chia sẻ. Hãy bấm Tải ảnh đã chọn.");
+      });
+    }catch(error){notify("Không thể chia sẻ. Hãy bấm Tải ảnh đã chọn.");}
+  }
+
 
   photoInput.addEventListener("change",function(event){
     var files=Array.prototype.slice.call(event.target.files||[]);
     event.target.value="";
     addPhotos(files);
   });
-  exportBtn.addEventListener("click",downloadAll);
-  batchApply.addEventListener("click",applyAll);
-  if (desktopApply) desktopApply.addEventListener("click",applyAll);
+
+  quickApply.addEventListener("click",openRecipePicker);
+  pickerClose.addEventListener("click",closeRecipePicker);
+  picker.addEventListener("click",function(event){
+    if(event.target===picker){closeRecipePicker();return;}
+    var option=event.target.closest("[data-recipe-pick]");
+    if(option){pickerSelectedRecipe=option.dataset.recipePick;renderRecipePicker();}
+  });
+  pickerConfirm.addEventListener("click",function(){
+    if(pickerSelectedRecipe && !pickerConfirm.disabled)applySavedRecipeToAll(pickerSelectedRecipe);
+  });
+  document.addEventListener("keydown",function(event){
+    if(!picker.hidden && event.key==="Escape") {
+      event.preventDefault();event.stopImmediatePropagation();closeRecipePicker();
+    }
+  },true);
+  exportGrid.addEventListener("click",function(event){
+    var target=event.target.closest("[data-export-pick]");
+    if(target)chooseEditedPhoto(target.dataset.exportPick);
+  });
+  exportShare.addEventListener("click",shareSelectedImage);
+  window.addEventListener("textmask:export-open",function(){
+    renderEditedGallery();
+    if(exportSelectedId)prepareSelectedImage();
+  });
+
   clearBtn.addEventListener("click",clearQueue);
   if(uploadGrid)uploadGrid.addEventListener("click",function(event){
     var remove=event.target.closest("[data-queue-remove]");
@@ -594,25 +717,10 @@
       if(select.value&&saveInputs[i])saveInputs[i].value=select.value;
     });
   });
-  // Keep the batch summary current when the watermark editor changes.
-  document.addEventListener("input",function(event){
-    if(event.target&&event.target.closest("#editorPanel")) {
-      var summary=document.getElementById("batchSettingsSummary");
-      if(summary)summary.textContent="“"+(document.getElementById("textInput").value.trim()||"Watermark")+"” · "+
-        document.getElementById("styleName").textContent+" · "+document.getElementById("gapVal").textContent;
-    }
-  });
-  document.addEventListener("click",function(event){
-    if(event.target&&event.target.closest("#styleGrid, #presetGrid, #fontChips, #effectChips")) {
-      var summary=document.getElementById("batchSettingsSummary");
-      if(summary)summary.textContent="“"+(document.getElementById("textInput").value.trim()||"Watermark")+"” · "+
-        document.getElementById("styleName").textContent+" · "+document.getElementById("gapVal").textContent;
-    }
-  });
   window.addEventListener("pagehide",function(event){
     if (event.persisted) return;
-    queue.forEach(function(item){if(item.url)URL.revokeObjectURL(item.url);});
-    clearPreparedZip();
+    queue.forEach(function(item){if(item.url)URL.revokeObjectURL(item.url);clearPhotoThumb(item);});
+    resetExportBlob();
   });
 
   async function initialize() {
