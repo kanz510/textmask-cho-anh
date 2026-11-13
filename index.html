@@ -272,37 +272,11 @@
         box-shadow: 0 8px 24px rgba(0,0,0,.3);
       }
       .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-      kbd {
-        display: inline-block; min-width: 26px; text-align: center;
-        font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; font-weight: 700;
-        background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px;
-        border-radius: 6px; padding: 2px 6px; color: var(--ink); line-height: 1.4; white-space: nowrap;
-      }
-      .shortcuts-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 80;
-        display: none; align-items: flex-end; justify-content: center; padding: 0;
-      }
-      .shortcuts-overlay.open { display: flex; }
-      @media (min-width: 640px) { .shortcuts-overlay { align-items: center; padding: 20px; } }
-      .shortcuts-dialog {
-        background: var(--surface); color: var(--ink); width: 100%; max-width: 560px;
-        max-height: 86vh; overflow: auto; border-radius: 16px 16px 0 0; padding: 20px 20px 16px;
-        box-shadow: 0 20px 50px rgba(0,0,0,.35);
-      }
-      @media (min-width: 640px) { .shortcuts-dialog { border-radius: 16px; } }
-      .shortcuts-dialog h2 { margin: 0; font-size: 19px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-      .shortcuts-dialog h2 button { flex: none; }
-      .sc-group { margin-top: 16px; }
-      .sc-group h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
-      .sc-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
-      .sc-row:first-of-type { border-top: 0; }
-      .sc-keys { display: flex; gap: 4px; flex: none; align-items: center; }
-      .sc-keys span { color: var(--muted); font-size: 12px; }
       @media (prefers-reduced-motion: reduce) {
         * { transition: none !important; }
       }
     </style>
-    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-2" />
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-3" />
   </head>
   <body>
     <div class="wrap">
@@ -327,7 +301,7 @@
         <section class="stage" aria-label="Xem trước ảnh">
           <div class="canvas-wrap" id="dropZone">
             <canvas id="preview" width="1200" height="900"></canvas>
-            <div class="drop-hint">Kéo thả ảnh vào khung này, hoặc dán bằng Ctrl+V</div>
+            <div class="drop-hint">Kéo thả ảnh vào khung này</div>
           </div>
           <div class="stage-actions">
             <label class="btn" for="fileInput">
@@ -335,21 +309,17 @@
               Chọn ảnh
             </label>
             <input type="file" id="fileInput" accept="image/*" hidden />
-            <button class="btn" id="demoBtn" type="button" title="Phím tắt: M">Dùng ảnh mẫu</button>
-            <button class="btn" id="shortcutsBtn" type="button" title="Phím tắt: ? hoặc H" aria-haspopup="dialog">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></svg>
-              Phím tắt <kbd>?</kbd>
-            </button>
+            <button class="btn" id="demoBtn" type="button">Dùng ảnh mẫu</button>
             <label class="btn" for="batchInput">Chọn nhiều ảnh</label>
             <input type="file" id="batchInput" accept="image/*" multiple hidden />
             <span class="img-info" id="imgInfo"></span>
           </div>
           <div class="export-row">
-            <button class="btn primary" id="dlPng" type="button" title="Ctrl / Cmd + S">
+            <button class="btn primary" id="dlPng" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Tải ảnh PNG
             </button>
-            <button class="btn" id="dlJpg" type="button" title="Ctrl / Cmd + Shift + S">Tải ảnh JPG</button>
+            <button class="btn" id="dlJpg" type="button">Tải ảnh JPG</button>
             <button class="btn" id="batchDl" type="button" disabled>Tải tất cả ảnh đã chọn (PNG)</button>
             <span class="img-info" id="batchInfo"></span>
           </div>
@@ -479,46 +449,6 @@
         <span>Xuất</span>
       </button>
     </nav>
-    <div class="shortcuts-overlay" id="shortcutsOverlay">
-      <div class="shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
-        <h2 id="shortcutsTitle">Phím tắt <button class="btn" id="shortcutsClose" type="button">Đóng <kbd>Esc</kbd></button></h2>
-
-        <div class="sc-group">
-          <h3>Ảnh &amp; tải xuống</h3>
-          <div class="sc-row"><span>Chọn ảnh</span><span class="sc-keys"><kbd>Ctrl</kbd><span>+</span><kbd>O</kbd></span></div>
-          <div class="sc-row"><span>Dán ảnh từ clipboard</span><span class="sc-keys"><kbd>Ctrl</kbd><span>+</span><kbd>V</kbd></span></div>
-          <div class="sc-row"><span>Dùng ảnh mẫu</span><span class="sc-keys"><kbd>M</kbd></span></div>
-          <div class="sc-row"><span>Tải ảnh PNG</span><span class="sc-keys"><kbd>Ctrl</kbd><span>+</span><kbd>S</kbd></span></div>
-          <div class="sc-row"><span>Tải ảnh JPG</span><span class="sc-keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>S</kbd></span></div>
-          <div class="sc-row"><span>Tải tất cả ảnh hàng loạt (PNG)</span><span class="sc-keys"><kbd>Ctrl</kbd><span>+</span><kbd>B</kbd></span></div>
-        </div>
-
-        <div class="sc-group">
-          <h3>Kiểu phủ chữ</h3>
-          <div class="sc-row"><span>Lưới đều · Xen kẽ · Chéo xiên · Dải ngang · Cột dọc</span><span class="sc-keys"><kbd>1</kbd><span>–</span><kbd>5</kbd></span></div>
-          <div class="sc-row"><span>Rải ngẫu nhiên · Giữa ảnh · Chữ lớn phủ · Bốn góc + giữa · Viền khung</span><span class="sc-keys"><kbd>6</kbd><span>–</span><kbd>0</kbd></span></div>
-        </div>
-
-        <div class="sc-group">
-          <h3>Chỉnh nhanh</h3>
-          <div class="sc-row"><span>Cỡ chữ to / nhỏ</span><span class="sc-keys"><kbd>↑</kbd><kbd>↓</kbd><span>hoặc</span><kbd>+</kbd><kbd>−</kbd></span></div>
-          <div class="sc-row"><span>Độ mờ tăng / giảm</span><span class="sc-keys"><kbd>→</kbd><kbd>←</kbd></span></div>
-          <div class="sc-row"><span>Khoảng cách chữ tăng / giảm</span><span class="sc-keys"><kbd>Shift</kbd><span>+</span><kbd>↑</kbd><kbd>↓</kbd></span></div>
-          <div class="sc-row"><span>Xoay trái / phải 5°</span><span class="sc-keys"><kbd>Q</kbd><kbd>E</kbd></span></div>
-          <div class="sc-row"><span>Đặt lại góc xoay về 0°</span><span class="sc-keys"><kbd>R</kbd></span></div>
-        </div>
-
-        <div class="sc-group">
-          <h3>Bật / tắt</h3>
-          <div class="sc-row"><span>Khung góc ⌜ ⌟</span><span class="sc-keys"><kbd>B</kbd></span></div>
-          <div class="sc-row"><span>VIẾT HOA toàn bộ</span><span class="sc-keys"><kbd>U</kbd></span></div>
-          <div class="sc-row"><span>Phủ thêm logo</span><span class="sc-keys"><kbd>L</kbd></span></div>
-          <div class="sc-row"><span>Tập trung vào ô chữ để gõ</span><span class="sc-keys"><kbd>T</kbd></span></div>
-          <div class="sc-row"><span>Mở / đóng bảng này</span><span class="sc-keys"><kbd>?</kbd><span>hoặc</span><kbd>H</kbd></span></div>
-        </div>
-        <p class="hint" style="margin-top:14px">Trên Mac dùng <kbd>Cmd</kbd> thay cho <kbd>Ctrl</kbd>. Khi đang gõ trong ô chữ, các phím chữ đơn sẽ không kích hoạt phím tắt.</p>
-      </div>
-    </div>
     <div class="toast" id="toast" role="status"></div>
 
     <script>
@@ -1305,140 +1235,6 @@
       document.getElementById("dlPng").addEventListener("click", function () { exportImage("png"); });
       document.getElementById("dlJpg").addEventListener("click", function () { exportImage("jpg"); });
 
-      /* ================= Keyboard shortcuts ================= */
-      var shortcutsOverlay = document.getElementById("shortcutsOverlay");
-      var shortcutsBtn = document.getElementById("shortcutsBtn");
-      var lastFocus = null;
-      function openShortcuts() {
-        lastFocus = document.activeElement;
-        shortcutsOverlay.classList.add("open");
-        document.getElementById("shortcutsClose").focus();
-      }
-      function closeShortcuts() {
-        shortcutsOverlay.classList.remove("open");
-        if (lastFocus && lastFocus.focus) lastFocus.focus();
-      }
-      shortcutsBtn.addEventListener("click", openShortcuts);
-      document.getElementById("shortcutsClose").addEventListener("click", closeShortcuts);
-      shortcutsOverlay.addEventListener("click", function (e) { if (e.target === shortcutsOverlay) closeShortcuts(); });
-
-      function bumpRange(id, delta) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        var min = parseFloat(el.min), max = parseFloat(el.max), step = parseFloat(el.step) || 1;
-        var next = Math.round((parseFloat(el.value) + delta) / step) * step;
-        next = Math.max(min, Math.min(max, next));
-        // avoid float dust
-        next = Math.round(next * 10) / 10;
-        if (String(next) === String(parseFloat(el.value))) return;
-        el.value = next;
-        el.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      function setRangeAbs(id, value) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.value = value;
-        el.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      function clickStyleByIndex(idx) {
-        var st = STYLES[idx];
-        if (!st) return;
-        var card = styleGrid.querySelector('[data-style="' + st.id + '"]');
-        if (card) { card.click(); toast("Kiểu phủ: " + st.name); }
-      }
-
-      document.addEventListener("keydown", function (e) {
-        var mod = e.ctrlKey || e.metaKey;
-        var target = e.target;
-        var tag = target && target.tagName ? target.tagName.toLowerCase() : "";
-        var isTyping = tag === "textarea" || (tag === "input" && !/^(range|color|file|checkbox|radio)$/.test(target.type || "text")) || (target && target.isContentEditable);
-        var isRange = tag === "input" && target.type === "range";
-
-        // Esc always closes the shortcuts panel
-        if (e.key === "Escape" && shortcutsOverlay.classList.contains("open")) {
-          e.preventDefault(); closeShortcuts(); return;
-        }
-
-        // Ctrl / Cmd combos — work everywhere
-        if (mod && !e.altKey) {
-          var k = (e.key || "").toLowerCase();
-          if (k === "s") {
-            e.preventDefault();
-            exportImage(e.shiftKey ? "jpg" : "png");
-            return;
-          }
-          if (k === "o") {
-            e.preventDefault();
-            document.getElementById("fileInput").click();
-            return;
-          }
-          if (k === "b") {
-            e.preventDefault();
-            if (!batchDlBtn.disabled && state.batch.length) batchDlBtn.click();
-            else toast("Chưa chọn ảnh hàng loạt — bấm “Chọn nhiều ảnh” trước");
-            return;
-          }
-          // Ctrl+V paste is handled by the paste listener; let it through
-          return;
-        }
-        if (mod || e.altKey) return;
-
-        // While the panel is open, only ? / H / Esc do anything
-        if (shortcutsOverlay.classList.contains("open")) {
-          if (e.key === "?" || e.key.toLowerCase() === "h") { e.preventDefault(); closeShortcuts(); }
-          return;
-        }
-        // Don't steal keys while typing, or while a slider has native arrow handling
-        if (isTyping || isRange) return;
-        if (tag === "select" || tag === "button") {
-          // Single-key shortcuts still work from buttons, except Space/Enter which activate them
-          if (e.key === " " || e.key === "Enter") return;
-        }
-
-        // Style selection: 1-9, 0
-        if (/^[0-9]$/.test(e.key)) {
-          var idx = e.key === "0" ? 9 : parseInt(e.key, 10) - 1;
-          e.preventDefault(); clickStyleByIndex(idx); return;
-        }
-
-        switch (e.key) {
-          case "ArrowUp":
-            e.preventDefault();
-            if (e.shiftKey) bumpRange("gapRange", 0.1); else bumpRange("sizeRange", 0.2);
-            break;
-          case "ArrowDown":
-            e.preventDefault();
-            if (e.shiftKey) bumpRange("gapRange", -0.1); else bumpRange("sizeRange", -0.2);
-            break;
-          case "ArrowRight":
-            e.preventDefault(); bumpRange("opacityRange", 5); break;
-          case "ArrowLeft":
-            e.preventDefault(); bumpRange("opacityRange", -5); break;
-          case "+": case "=":
-            e.preventDefault(); bumpRange("sizeRange", 0.2); break;
-          case "-": case "_":
-            e.preventDefault(); bumpRange("sizeRange", -0.2); break;
-          case "?": case "h": case "H":
-            e.preventDefault(); openShortcuts(); break;
-          default: {
-            var lk = (e.key || "").toLowerCase();
-            if (lk === "q") { e.preventDefault(); bumpRange("angleRange", -5); }
-            else if (lk === "e") { e.preventDefault(); bumpRange("angleRange", 5); }
-            else if (lk === "r") { e.preventDefault(); setRangeAbs("angleRange", 0); toast("Góc xoay: 0°"); }
-            else if (lk === "b") { e.preventDefault(); document.getElementById("bracketToggle").click(); }
-            else if (lk === "u") { e.preventDefault(); document.getElementById("capsToggle").click(); }
-            else if (lk === "l") {
-              e.preventDefault();
-              if (!state.logo) toast("Chưa chọn logo — chọn logo trước rồi mới bật được");
-              else document.getElementById("logoToggle").click();
-            }
-            else if (lk === "m") { e.preventDefault(); document.getElementById("demoBtn").click(); }
-            else if (lk === "t") { e.preventDefault(); textInput.focus(); textInput.select(); }
-            break;
-          }
-        }
-      });
-
       /* ================= Init ================= */
       var demo = makeDemoImage();
       setImage(demo, demo.width, demo.height, "anh-mau", true);
@@ -1447,6 +1243,6 @@
         document.fonts.ready.then(function () { render(); refreshThumbs(); });
       }
     </script>
-    <script src="./mobile-ui.js?v=20261113-2"></script>
+    <script src="./mobile-ui.js?v=20261113-3"></script>
   </body>
 </html>

@@ -312,7 +312,7 @@ input[type="range"] { width:100%; height:34px; accent-color:#f58acb; cursor:poin
     transition:transform .34s cubic-bezier(.2,.82,.2,1),opacity .24s ease,visibility .34s;
     scrollbar-width:none; -webkit-overflow-scrolling:touch;
   }
-  .panel::-webkit-scrollbar, .shortcuts-dialog::-webkit-scrollbar { display:none; }
+  .panel::-webkit-scrollbar { display:none; }
   body.sheet-open .panel {
     transform:translateY(0); opacity:1; visibility:visible; pointer-events:auto;
   }
@@ -418,12 +418,6 @@ input[type="range"] { width:100%; height:34px; accent-color:#f58acb; cursor:poin
   .sheet-section { padding:4px 0 0; }
   .sheet-section .sheet-note { color:#c4b9cb; }
   .sheet-actions .btn { min-height:52px; }
-  .shortcuts-dialog {
-    max-height:min(84dvh,700px); border-radius:25px 25px 0 0;
-    padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
-    background:rgba(34,28,43,.94); border:1px solid rgba(255,255,255,.16);
-    backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px);
-  }
   .toast {
     bottom:calc(var(--dock-height) + env(safe-area-inset-bottom,0px) + 17px);
     width:max-content; max-width:calc(100vw - 40px); font-size:12px;

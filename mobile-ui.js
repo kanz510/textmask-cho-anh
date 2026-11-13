@@ -74,7 +74,6 @@
     '<button type="button" class="btn primary" data-input="fileInput">Chọn ảnh mới</button>' +
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
     '<button type="button" class="btn wide" data-input="batchInput">Chọn nhiều ảnh</button>' +
-    '<button type="button" class="btn wide" data-proxy="shortcutsBtn">⌨ Xem phím tắt</button>' +
     '</div><p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
@@ -176,7 +175,6 @@
     var id = proxy.dataset.proxy || proxy.dataset.input;
     var original = document.getElementById(id);
     if (!original || original.disabled) return;
-    if (id === "shortcutsBtn") closeSheet();
     if (id === "demoBtn") closeSheet();
     original.click();
   });

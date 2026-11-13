@@ -14,7 +14,7 @@ Giao diện dark mode, mobile-first theo concept Liquid Glass: kính mờ nhiề
 - **Chỉnh:** điều chỉnh cỡ chữ, độ mờ, khoảng cách, góc xoay, màu, logo và trang trí bằng các thanh trượt/nút chạm.
 - **Xuất:** tải PNG/JPG theo kích thước gốc, chọn nhiều ảnh và tải hàng loạt.
 
-Thanh công cụ dạng kính nổi phía dưới. Bảng chỉnh sửa Liquid Glass có thể kéo xuống bằng tay nắm, đóng bằng nút **×** hoặc chạm vùng nền mờ. Nút **⋯** phía trên mở ảnh mẫu, chọn nhiều ảnh hoặc xem trợ giúp. Trên desktop, toàn bộ panel điều khiển vẫn xuất hiện cạnh khung ảnh như trước.
+Thanh công cụ dạng kính nổi phía dưới. Bảng chỉnh sửa Liquid Glass có thể kéo xuống bằng tay nắm, đóng bằng nút **×** hoặc chạm vùng nền mờ. Nút **⋯** phía trên mở ảnh mẫu và chọn nhiều ảnh. Trên desktop, toàn bộ panel điều khiển vẫn xuất hiện cạnh khung ảnh như trước.
 
 Có thể **Thêm vào Màn hình chính** trên trình duyệt hỗ trợ. Service worker lưu các tệp cục bộ để sử dụng lại khi ngoại tuyến; phông Google có thể không tải khi offline và sẽ thay bằng font hệ thống.
 
@@ -22,7 +22,6 @@ Có thể **Thêm vào Màn hình chính** trên trình duyệt hỗ trợ. Serv
 
 - 10 kiểu phủ chữ, 11 phông, 7 hiệu ứng, 6 mẫu có sẵn, logo watermark.
 - Tải PNG/JPG đúng kích thước ảnh gốc, xử lý nhiều ảnh.
-- Kéo thả ảnh, dán ảnh và phím tắt trên desktop: Ctrl/Cmd+O, Ctrl/Cmd+S, Ctrl/Cmd+Shift+S, phím 1–0 chọn kiểu.
 - Canvas vẽ và thuật toán xử lý ảnh vẫn giữ tại `index.html`. Giao diện mobile và điều hướng tách thành `mobile-ui.css`, `mobile-ui.js`. Giao diện dùng hiệu ứng kính mờ và chuyển động tôn trọng cài đặt Reduce Motion.
 
 ## Kiểm thử thủ công nên chạy trước khi phát hành
@@ -32,7 +31,6 @@ Có thể **Thêm vào Màn hình chính** trên trình duyệt hỗ trợ. Serv
 3. Mở các mục Chữ, Kiểu, Chỉnh, Xuất; đóng bằng nút × và nền mờ; thử bàn phím iOS khi nhập chữ.
 4. Đổi font, preset, hiệu ứng, slider và logo; ảnh preview cập nhật.
 5. Tải PNG/JPG; đối chiếu kích thước tệp gốc, thử chọn và tải nhiều ảnh.
-6. Mở desktop 1024px+ và kiểm tra phím tắt cũ; xoay ngang điện thoại; thử VoiceOver và Reduce Motion.
 7. Add to Home Screen; tải một lượt khi có mạng, sau đó thử mở lại offline.
 
 ## Phát triển
