@@ -1,5 +1,5 @@
 /* Scope-relative, network-first offline support for GitHub Pages. */
-const CACHE_NAME = "textmask-studio-v1-20261113";
+const CACHE_NAME = "textmask-studio-v2-20261113";
 const OFFLINE_FILES = ["./", "./index.html", "./mobile-ui.css", "./mobile-ui.js", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

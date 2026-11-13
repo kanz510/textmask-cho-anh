@@ -217,6 +217,51 @@
   else if (mq.addListener) mq.addListener(adaptLayout);
   adaptLayout();
 
+  // Keep the editor fitted to the visible iPhone viewport when the keyboard opens.
+  function syncVisibleHeight() {
+    if (!window.visualViewport || !mq.matches) return;
+    document.documentElement.style.setProperty("--app-height", window.visualViewport.height + "px");
+  }
+  syncVisibleHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", syncVisibleHeight);
+    window.visualViewport.addEventListener("scroll", syncVisibleHeight);
+  }
+  window.addEventListener("orientationchange", syncVisibleHeight);
+
+  // Drag the small grab-handle down to dismiss the glass sheet.
+  var dragStartY = null;
+  var dragDistance = 0;
+  heading.addEventListener("touchstart", function (event) {
+    if (!mq.matches || !document.body.classList.contains("sheet-open") ||
+        event.touches.length !== 1 || event.target.closest("button")) return;
+    var bounds = heading.getBoundingClientRect();
+    var y = event.touches[0].clientY;
+    if (y - bounds.top > 22) return;
+    dragStartY = y;
+    dragDistance = 0;
+    panel.style.transition = "none";
+  }, { passive: true });
+  heading.addEventListener("touchmove", function (event) {
+    if (dragStartY === null || event.touches.length !== 1) return;
+    dragDistance = Math.max(0, event.touches[0].clientY - dragStartY);
+    if (dragDistance > 0) {
+      event.preventDefault();
+      panel.style.transform = "translateY(" + Math.min(dragDistance, 260) + "px)";
+    }
+  }, { passive: false });
+  function finishSheetDrag() {
+    if (dragStartY === null) return;
+    var shouldClose = dragDistance > 92;
+    dragStartY = null;
+    dragDistance = 0;
+    panel.style.transition = "";
+    panel.style.transform = "";
+    if (shouldClose) closeSheet();
+  }
+  heading.addEventListener("touchend", finishSheetDrag, { passive: true });
+  heading.addEventListener("touchcancel", finishSheetDrag, { passive: true });
+
   // Lightweight iOS/Android install support. Network-first SW avoids frozen releases.
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener("load", function () {
