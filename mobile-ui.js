@@ -108,7 +108,9 @@
     '<button type="button" class="btn primary" data-input="fileInput">Chọn ảnh mới</button>' +
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
     '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
-    '</div><p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
+    '<button type="button" class="btn wide" id="appRefreshBtn">↻ Cập nhật ứng dụng</button>' +
+    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.4 · Không xoá ảnh và công thức khi cập nhật.</p>' +
+    '<p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
   var closeButton = document.getElementById("mobileSheetClose");
@@ -301,10 +303,50 @@
   heading.addEventListener("touchend", finishSheetDrag, { passive: true });
   heading.addEventListener("touchcancel", finishSheetDrag, { passive: true });
 
-  // Lightweight iOS/Android install support. Network-first SW avoids frozen releases.
+  // Always check for the latest worker rather than trusting Safari's HTTP
+  // cache of sw.js. Never automatically reload while somebody is editing.
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("./sw.js").catch(function () {});
+      navigator.serviceWorker.register("./sw.js", {updateViaCache:"none"})
+        .then(function (reg) { return reg.update(); })
+        .catch(function () {});
     });
   }
+  var refreshButton = document.getElementById("appRefreshBtn");
+  if (refreshButton) refreshButton.addEventListener("click", async function () {
+    refreshButton.disabled = true;
+    refreshButton.textContent = "Đang kiểm tra bản mới…";
+    try {
+      // A unique navigation URL bypasses both older service-worker cache
+      // entries and the browser's URL-based HTML cache.
+      var probe = new URL("./index.html", location.href);
+      probe.searchParams.set("_fresh", Date.now().toString(36));
+      var response = await fetch(probe.toString(), {cache:"no-store"});
+      if (!response.ok) throw new Error("Không kết nối được máy chủ");
+      var source = await response.text();
+      if (source.indexOf("mobile-ui.css?v=20261114-4") === -1)
+        throw new Error("Bản mới chưa có trên máy chủ");
+      if ("serviceWorker" in navigator) {
+        var reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          try { await reg.update(); } catch (error) {}
+        }
+      }
+      if ("caches" in window) {
+        var names = await caches.keys();
+        await Promise.all(names.filter(function (name) {
+          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-4-20261114";
+        }).map(function (name) { return caches.delete(name); }));
+      }
+      var next = new URL("./index.html", location.href);
+      next.searchParams.set("v", "13.4");
+      next.searchParams.set("fresh", Date.now().toString(36));
+      location.replace(next.toString());
+    } catch (error) {
+      refreshButton.disabled = false;
+      refreshButton.textContent = "↻ Thử cập nhật lại";
+      var info = document.getElementById("appVersionInfo");
+      if (info) info.textContent = "Không thể cập nhật: " + (error.message || "Kiểm tra kết nối mạng");
+    }
+  });
 })();

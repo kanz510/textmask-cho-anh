@@ -98,3 +98,14 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - Dành vùng cho home indicator bằng padding **bên trong** dock, giới hạn safe-area trên iPhone tránh sai số bất thường. Màn hình ngang cũng dùng chiều cao phù hợp.
 - Tự tăng vùng ảnh hiển thị còn lại tương ứng. Giữ nguyên các tab, chức năng và logic xuất ảnh sang album.
 - Đã xác nhận cú pháp/cấu trúc CSS và cập nhật cache; chưa kiểm thử trực tiếp Safari trên máy thật.
+
+
+### V13.4 · Khắc phục cache iPhone/PWA
+
+- Xác nhận bản V13.3 đã được GitHub Pages triển khai thành công, nhưng thiết bị có thể giữ HTML/tài nguyên cũ qua cache.
+- Nâng đồng bộ query version cho toàn bộ CSS/JS sang `20261114-4` và thêm `meta textmask-build=13.4`.
+- Service worker mới ưu tiên mạng và bỏ HTTP disk cache cho HTML/CSS/JS; fallback HTML offline giữ ở một cache key ổn định, tránh nhân bản trang theo từng query.
+- Khi tải trang, đăng ký SW với `updateViaCache:'none'` và gọi `registration.update()`.
+- Thêm trong menu ••• nút **Cập nhật ứng dụng**, kiểm tra HTML mới trực tiếp, xoá **chỉ** các cache Textmask cũ, rồi chuyển về `index.html?v=13.4`.
+- Không xoá IndexedDB, ảnh tải lên, công thức đã lưu hay thay đổi bộ máy chỉnh ảnh. Không reload bất ngờ trong lúc chỉnh ảnh.
+- Chưa thử trực tiếp trên PWA iPhone; nếu khoảng trống đáy vẫn còn sau khi đã xác minh V13.4, cần đo innerHeight, visualViewport.height, dock.getBoundingClientRect() và safe-area trên thiết bị.
