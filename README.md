@@ -68,3 +68,15 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - Nếu chưa sửa gì, ảnh được xuất không watermark. Khi chọn một ảnh trong danh sách chờ và dùng các công cụ Chữ/Kiểu/Chỉnh, cấu hình chỉnh tay được lưu riêng vào chính ảnh đó (IndexedDB), không bắt buộc tạo/lưu công thức.
 - Chọn lại ảnh đã chỉnh để tiếp tục sửa; các ảnh còn lại giữ nguyên chỉnh sửa của chúng. Khi nhấn **Áp dụng chung**, công thức đã chọn được gắn vào toàn bộ ảnh chờ như trước.
 - **Lưu vào Ảnh** vẫn dùng Web Share của Safari và yêu cầu chọn **Lưu hình ảnh** từ bảng chia sẻ hệ thống.
+
+
+### V13.1 · Tối ưu hiệu năng iPhone, giữ nguyên giao diện
+
+- Gộp các lần vẽ preview liên tiếp bằng requestAnimationFrame; canvas xem trước tối đa 1400px, không giảm độ phân giải xuất.
+- Cache mẫu kiểu chữ, chỉ làm mới khi thuộc tính liên quan thay đổi.
+- Chỉ dựng danh sách Nhiều ảnh và Xuất khi tab đang mở.
+- Tạo thumbnail 280px lần lượt cho các ảnh tải lên, tránh để nhiều ảnh gốc 12MP bị giải mã cùng lúc trong danh sách.
+- Debounce chỉnh thủ công 450ms trước khi lưu, vẫn lưu khi đổi ảnh và khi mở Xuất.
+- Sửa kiểm tra phiên bản thumbnail khi khôi phục công thức từ IndexedDB.
+- Không thay đổi bố cục, logic công thức, cách lưu một ảnh vào album iPhone; không thêm ZIP hay nút tải file.
+- Kiểm tra tĩnh và cú pháp JS đã chạy; chưa đo FPS hoặc RAM trực tiếp trên Safari iPhone.

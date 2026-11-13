@@ -150,7 +150,7 @@
     panel.removeAttribute("aria-hidden");
     document.body.classList.add("sheet-open");
     panel.scrollTop = 0;
-    if (group === "batch") syncBatch();
+    if (group === "batch") { syncBatch(); window.dispatchEvent(new Event("textmask:batch-open")); }
     resetTabs();
     closeButton.focus({ preventScroll: true });
     if (group === "export") window.dispatchEvent(new Event("textmask:export-open"));

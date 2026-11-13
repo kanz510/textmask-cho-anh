@@ -46,6 +46,16 @@
   var pickerConfirm = document.getElementById("batchConfirmApply");
   var pickerClose = document.getElementById("recipePickerClose");
   var exportGrid = document.getElementById("exportEditedGrid");
+  var batchSection = document.getElementById("mobileBatchSection");
+  var exportSection = document.getElementById("mobileExportSection");
+  var thumbnailJobs = [];
+  var thumbnailWorker = false;
+  function isBatchVisible() {
+    return !!batchSection && !batchSection.hidden && document.body.classList.contains("sheet-open");
+  }
+  function isExportVisible() {
+    return !!exportSection && !exportSection.hidden && document.body.classList.contains("sheet-open");
+  }
   var exportEmpty = document.getElementById("exportEditedEmpty");
   var exportCount = document.getElementById("exportEditedCount");
   var exportPanel = document.getElementById("exportSelectedPanel");
@@ -125,6 +135,8 @@
   }
   function dropPhoto(item) {
     if (item.url) URL.revokeObjectURL(item.url);
+    if (item.thumbUrl) URL.revokeObjectURL(item.thumbUrl);
+    item.thumbUrl = null;
     clearPhotoThumb(item);
     if (!db) return Promise.resolve();
     return promiseStore("photos","delete",item.id).catch(function () {
@@ -139,11 +151,13 @@
       date:record.date || Date.now(),
       applied:record.applied || null,
       editKind:record.editKind || (record.applied ? "recipe" : "original"),
+      thumbUrl:null,
+      thumbRevision:0,
       url:URL.createObjectURL(record.file)
     };
   }
   function updateQueue() {
-    if (uploadGrid) {
+    if (uploadGrid && isBatchVisible()) {
       uploadGrid.textContent = "";
       queue.forEach(function (item) {
         var card = document.createElement("div");
@@ -155,8 +169,9 @@
         select.setAttribute("aria-label","Xem trước ảnh " + item.name);
         var image = document.createElement("img");
         image.loading = "lazy";
+        image.decoding = "async";
         image.alt = "";
-        image.src = item.url;
+        if (item.thumbUrl) image.src = item.thumbUrl;
         select.appendChild(image);
         var detail = document.createElement("span");
         detail.className = "queue-photo-detail";
@@ -177,6 +192,7 @@
         card.appendChild(select);
         card.appendChild(remove);
         uploadGrid.appendChild(card);
+        if (!item.thumbUrl) enqueueOriginalThumb(item);
       });
     }
     var total = queue.length;
@@ -214,10 +230,54 @@
     return new Promise(function (resolve,reject) {
       var url = URL.createObjectURL(blob);
       var img = new Image();
+      img.decoding = "async";
       img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
       img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Không đọc được ảnh")); };
       img.src = url;
     });
+  }
+  // iOS must not decode every 12MP photo as an <img> in tiny galleries.
+  // Create a single small thumbnail at a time, yielding between images.
+  function enqueueOriginalThumb(item) {
+    if (!item || item.thumbUrl || item.originalThumbPending) return;
+    item.originalThumbPending = true;
+    thumbnailJobs.push(item);
+    if (!thumbnailWorker) {
+      thumbnailWorker = true;
+      setTimeout(runOriginalThumbQueue, 30);
+    }
+  }
+  async function runOriginalThumbQueue() {
+    while (thumbnailJobs.length) {
+      var item = thumbnailJobs.shift();
+      if (!findPhoto(item.id)) { item.originalThumbPending = false; continue; }
+      try {
+        var image = await loadPicture(item.file);
+        if (!findPhoto(item.id)) { item.originalThumbPending = false; continue; }
+        var ratio = Math.min(1, 280 / Math.max(image.naturalWidth,image.naturalHeight));
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.max(1,Math.round(image.naturalWidth * ratio));
+        canvas.height = Math.max(1,Math.round(image.naturalHeight * ratio));
+        canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);
+        var blob = await new Promise(function(resolve){canvas.toBlob(resolve,"image/png");});
+        canvas.width = 0; canvas.height = 0;
+        if (blob && findPhoto(item.id) === item) {
+          item.thumbUrl = URL.createObjectURL(blob);
+          document.querySelectorAll("[data-queue-open],[data-export-pick]").forEach(function(card){
+            if (card.dataset.queueOpen === item.id || card.dataset.exportPick === item.id) {
+              var img = card.querySelector("img");
+              if (img && (!card.dataset.exportPick || !item.editedThumbUrl)) img.src = item.thumbUrl;
+            }
+          });
+        }
+      } catch(error) {
+        // Keep the queue usable even if a thumbnail cannot be decoded.
+      } finally {
+        item.originalThumbPending = false;
+      }
+      await new Promise(function(resolve){setTimeout(resolve,15);});
+    }
+    thumbnailWorker = false;
   }
   async function previewPhoto(id) {
     var item = findPhoto(id);
@@ -285,7 +345,12 @@
     if (!queue.length || busy) return;
     if (!window.confirm("Xoá toàn bộ ảnh đang chờ khỏi thiết bị? Công thức đã lưu vẫn được giữ.")) return;
     resetExportBlob();
-    queue.forEach(function (item) { if (item.url) URL.revokeObjectURL(item.url); clearPhotoThumb(item); });
+    queue.forEach(function (item) {
+      if (item.url) URL.revokeObjectURL(item.url);
+      if (item.thumbUrl) URL.revokeObjectURL(item.thumbUrl);
+      item.thumbUrl = null;
+      clearPhotoThumb(item);
+    });
     queue=[];
     clearTimeout(manualTimer);
     manualTimer = null;
@@ -584,7 +649,7 @@
       if(document.fonts&&document.fonts.load) {
         try {await document.fonts.load(font.weight+" 16px "+font.stack);}catch(error){}
       }
-      if(item.applied!==recipe || item.thumbRevision!==revision) return null;
+      if(item.applied!==recipe || (item.thumbRevision||0)!==revision) return null;
       var ratio=Math.min(1,340/Math.max(image.naturalWidth,image.naturalHeight));
       var canvas=document.createElement("canvas"),before=snapshotState();
       try {
@@ -594,7 +659,7 @@
       } finally {Object.assign(window.state,before);}
       var blob=await new Promise(function(resolve){canvas.toBlob(resolve,"image/png");});
       canvas.width=0;canvas.height=0;
-      if(!blob || item.applied!==recipe || item.thumbRevision!==revision) return null;
+      if(!blob || item.applied!==recipe || (item.thumbRevision||0)!==revision) return null;
       item.editedThumbUrl=URL.createObjectURL(blob);
       return item.editedThumbUrl;
     })().catch(function(){return null;}).then(function(value) {
@@ -604,7 +669,7 @@
     return item.thumbPromise;
   }
   function renderEditedGallery() {
-    if(!exportGrid) return;
+    if(!exportGrid || !isExportVisible()) return;
     var edited=completedPhotos();
     exportCount.textContent=edited.length+" ảnh";
     exportEmpty.hidden=edited.length>0;
@@ -630,7 +695,9 @@
       card.setAttribute("aria-pressed",item.id===exportSelectedId?"true":"false");
       card.setAttribute("aria-label","Chọn ảnh: "+item.name+" · "+photoStatus(item));
       var img=document.createElement("img");
-      img.alt="";img.loading="lazy";img.src=item.editedThumbUrl||item.url;
+      img.alt="";img.loading="lazy";img.decoding="async";
+      if (item.editedThumbUrl || item.thumbUrl) img.src=item.editedThumbUrl||item.thumbUrl;
+      if (!item.thumbUrl) enqueueOriginalThumb(item);
       var name=document.createElement("strong");name.textContent=item.name;
       var mark=document.createElement("span");
       mark.className="edited-photo-marker"+(item.applied ? " is-edited" : " is-original");
@@ -727,7 +794,7 @@
     window.textmaskPreviewRaw=false;
     clearTimeout(manualTimer);
     manualPendingId=queueSelected;
-    manualTimer=setTimeout(flushManualEdit,260);
+    manualTimer=setTimeout(flushManualEdit,450);
   }
   function manualInputTarget(target) {
     return !!(target && target.closest && target.closest("#editorPanel") &&
@@ -776,6 +843,7 @@
     addPhotos(files);
   });
 
+  window.addEventListener("textmask:batch-open",updateQueue);
   quickApply.addEventListener("click",openRecipePicker);
   pickerClose.addEventListener("click",closeRecipePicker);
   picker.addEventListener("click",function(event){
@@ -827,7 +895,12 @@
   });
   window.addEventListener("pagehide",function(event){
     if (event.persisted) return;
-    queue.forEach(function(item){if(item.url)URL.revokeObjectURL(item.url);clearPhotoThumb(item);});
+    queue.forEach(function(item){
+      if(item.url) URL.revokeObjectURL(item.url);
+      if(item.thumbUrl) URL.revokeObjectURL(item.thumbUrl);
+      item.thumbUrl=null;
+      clearPhotoThumb(item);
+    });
     resetExportBlob();
   });
 

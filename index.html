@@ -276,8 +276,8 @@
         * { transition: none !important; }
       }
     </style>
-    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-11" />
-    <link rel="stylesheet" href="./batch-workspace.css?v=20261113-13" />
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261114-1" />
+    <link rel="stylesheet" href="./batch-workspace.css?v=20261114-1" />
   </head>
   <body>
     <div class="wrap">
@@ -869,18 +869,36 @@
         drawPattern(ctx, W, H, patternOpts(W));
         drawLogoPattern(ctx, W, H);
       }
-      function render() {
+      // Render the newest state once per display frame, even during rapid
+      // slider/touch input. Full-size exports still use renderTo directly.
+      var previewFrame = 0;
+      function paintPreview() {
+        previewFrame = 0;
         if (!state.img) return;
-        var maxSide = 1800;
+        var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        var viewportSide = Math.max(
+          preview.clientWidth || 0,
+          preview.clientHeight || 0,
+          window.innerWidth || 390
+        );
+        // Safari's canvas backing store can be expensive on iPhone.
+        // Scale to its displayed size, not to the original 12-48MP image.
+        var maxSide = Math.min(1400, Math.max(960, Math.round(viewportSide * dpr)));
         var scale = Math.min(1, maxSide / Math.max(state.imgW, state.imgH));
+        var W = Math.max(1, Math.round(state.imgW * scale));
+        var H = Math.max(1, Math.round(state.imgH * scale));
         if (window.textmaskPreviewRaw && !state.isDemo) {
-          preview.width = Math.round(state.imgW * scale);
-          preview.height = Math.round(state.imgH * scale);
-          preview.getContext("2d").drawImage(state.img, 0, 0, preview.width, preview.height);
+          preview.width = W;
+          preview.height = H;
+          preview.getContext("2d").drawImage(state.img, 0, 0, W, H);
         } else {
-          renderTo(preview, Math.round(state.imgW * scale), Math.round(state.imgH * scale));
+          renderTo(preview, W, H);
         }
         imgInfo.textContent = (state.isDemo ? "Ảnh mẫu · " : "Ảnh của bạn · ") + state.imgW + " × " + state.imgH + " px";
+      }
+      function render() {
+        if (previewFrame) return;
+        previewFrame = window.requestAnimationFrame(paintPreview);
       }
       function setImage(drawable, w, h, name, isDemo) {
         state.img = drawable; state.imgW = w; state.imgH = h;
@@ -942,8 +960,22 @@
           gap: state.gap, angleDeg: 0, brackets: false, tw: 0
         });
       }
+      var styleThumbFrame = 0;
+      var styleThumbSignature = "";
       function refreshThumbs() {
-        STYLES.forEach(function (st) { if (thumbCanvases[st.id]) paintThumb(thumbCanvases[st.id], st); });
+        if (styleThumbFrame) return;
+        styleThumbFrame = window.requestAnimationFrame(function () {
+          styleThumbFrame = 0;
+          var signature = [
+            displayText(), state.font.id, state.effect,
+            state.gap, state.color2, state.caps
+          ].join("|");
+          if (signature === styleThumbSignature) return;
+          styleThumbSignature = signature;
+          STYLES.forEach(function (st) {
+            if (thumbCanvases[st.id]) paintThumb(thumbCanvases[st.id], st);
+          });
+        });
       }
       STYLES.forEach(function (st) {
         var b = document.createElement("button");
@@ -1241,7 +1273,7 @@
         document.fonts.ready.then(function () { render(); refreshThumbs(); });
       }
     </script>
-    <script src="./mobile-ui.js?v=20261113-13"></script>
-    <script src="./batch-workspace.js?v=20261113-13"></script>
+    <script src="./mobile-ui.js?v=20261114-1"></script>
+    <script src="./batch-workspace.js?v=20261114-1"></script>
   </body>
 </html>
