@@ -6,7 +6,7 @@ Công cụ phủ chữ (text mask/watermark) và logo lên ảnh, xử lý **ho�
 
 ## Trên iPhone / Android
 
-Giao diện dark mode, mobile-first theo concept Liquid Glass: kính mờ nhiều lớp, viền phản chiếu, ánh sáng hồng-lavender và khung xem trước rộng. Thanh công cụ cố định dưới màn hình:
+Giao diện Light Liquid Glass, mobile-first với nền trắng ngọc trai: kính mờ nhiều lớp, viền phản chiếu, ánh sáng hồng-lavender và khung xem trước rộng. Thanh công cụ cố định dưới màn hình:
 
 - **Ảnh:** chọn ảnh từ thư viện hoặc Files.
 - **Chữ:** nhập nội dung và chọn một trong 11 phông chữ.
