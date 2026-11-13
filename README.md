@@ -55,3 +55,15 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 ### UI photo-first (V9)
 
 Mobile ẩn branding ở header, giảm chiều cao header/dock, tăng khung preview. Nút **Nhiều ảnh** ở trên bên trái mở bảng 3 bước: chọn ảnh, chỉnh mẫu chung rồi **Áp dụng & tải tất cả PNG**. Tải áp dụng thiết lập hiện tại cho toàn bộ ảnh; có trạng thái, số ảnh đã chọn. Giữ tính năng lưu ảnh và tải PNG/JPG.
+
+
+### V10 · Ảnh đã tải lên và kho công thức
+- **Nhiều ảnh** hiển thị danh sách ảnh chờ, ảnh thu nhỏ, trạng thái đã áp dụng, chọn để xem trước, xoá ảnh hoặc tải thêm.
+- Hàng chờ sử dụng IndexedDB trong trình duyệt trên thiết bị để giữ ảnh khi đóng và mở lại. Safari vẫn có thể thu hồi dữ liệu khi thiếu dung lượng hoặc xoá dữ liệu trang. Nếu không hỗ trợ lưu, hàng chờ chỉ ở trong phiên.
+- Sửa kiểu phủ chữ hiện tại rồi bấm **Áp dụng công thức cho tất cả** để chốt bản chỉnh cho toàn bộ ảnh chờ. Các thay đổi sau đó không tự thay đổi các ảnh đã chốt, cần bấm Áp dụng lại.
+- **Tải bộ ảnh** tạo 1 tệp ZIP chứa PNG riêng cho từng ảnh (không tải đồng loạt từng file, để tiện trên Safari iPhone).
+- Công thức có thể đặt tên, lưu, áp dụng lại và xoá. Bao gồm phông, nội dung, kiểu, màu, mật độ, góc xoay, hiệu ứng và logo (logo được thu gọn để lưu cục bộ).
+- Ảnh và công thức được xử lý trên thiết bị, không có tải dữ liệu lên máy chủ.
+
+
+**Tải bộ ảnh:** Nhấn **Tạo bộ ảnh ZIP**, sau khi xử lý xong sẽ xuất hiện nút **Tải ZIP vừa tạo**. Chạm nút này để lưu vào ứng dụng Tệp của iPhone. Cần chạm lần thứ hai do Safari thường chặn tải nhiều tệp sau các thao tác xử lý bất đồng bộ.

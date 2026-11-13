@@ -276,7 +276,8 @@
         * { transition: none !important; }
       }
     </style>
-    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-9" />
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-10" />
+    <link rel="stylesheet" href="./batch-workspace.css?v=20261113-10" />
   </head>
   <body>
     <div class="wrap">
@@ -324,7 +325,9 @@
               Tải ảnh PNG
             </button>
             <button class="btn" id="dlJpg" type="button">Tải ảnh JPG</button>
-            <button class="btn" id="batchDl" type="button" disabled>Tải tất cả ảnh đã chọn (PNG)</button>
+            <button class="btn" id="desktopApplyAll" type="button" disabled>Áp dụng chung cho tất cả ảnh</button>
+            <button class="btn" id="batchDl" type="button" disabled>Tạo bộ ảnh ZIP (PNG)</button>
+            <a class="btn primary" id="desktopZipReadyLink" hidden>Tải ZIP vừa tạo</a>
             <span class="img-info" id="batchInfo"></span>
           </div>
         </section>
@@ -361,6 +364,21 @@
               <button class="grad-chip" type="button" data-g="#b06ee8" style="background:linear-gradient(90deg,#ff5c9e,#b06ee8)" aria-pressed="false">Hồng tím</button>
               <button class="grad-chip" type="button" data-g="#2b7de0" style="background:linear-gradient(90deg,#39c2d7,#2b7de0)" aria-pressed="false">Xanh biển</button>
               <label class="color-custom"><input type="color" id="color2Custom" value="#ffd94d" /> Tự chọn</label>
+            </div>
+          </div>
+
+          <div class="field" id="recipeField">
+            <div class="label"><span>Kho công thức</span></div>
+            <p class="hint">Lưu thiết lập phủ chữ hiện tại và dùng lại bất cứ lúc nào.</p>
+            <div class="recipe-controls">
+              <input class="text-input" id="recipeNameInput" type="text" maxlength="50" placeholder="Tên công thức, ví dụ: Watermark shop" autocomplete="off" aria-label="Tên công thức" />
+              <button class="btn primary" id="recipeSaveBtn" type="button">Lưu công thức hiện tại</button>
+              <select class="text-input" id="recipeSavedSelect" aria-label="Công thức đã lưu"><option value="">Chọn công thức đã lưu</option></select>
+              <div class="recipe-actions">
+                <button class="btn" id="recipeLoadBtn" type="button">Dùng công thức</button>
+                <button class="btn" id="recipeDeleteBtn" type="button">Xoá công thức</button>
+              </div>
+              <p class="hint" id="recipeStatus" role="status" aria-live="polite"></p>
             </div>
           </div>
 
@@ -1171,58 +1189,10 @@
         im.src = url;
       });
 
-      /* ================= Batch (nhiều ảnh một lượt) ================= */
+      /* ================= Batch workspace ================= */
+      // Managed by batch-workspace.js; the existing canvas rendering remains here.
       var batchInfo = document.getElementById("batchInfo");
       var batchDlBtn = document.getElementById("batchDl");
-      document.getElementById("batchInput").addEventListener("change", function (e) {
-        var files = Array.prototype.slice.call(e.target.files || []).filter(function (f) { return /^image\//.test(f.type); });
-        e.target.value = "";
-        if (!files.length) { toast("Chưa chọn được ảnh nào"); return; }
-        state.batch = [];
-        batchDlBtn.disabled = true;
-        batchInfo.textContent = "Đang chuẩn bị " + files.length + " ảnh…";
-        var pending = files.length;
-        files.forEach(function (f) {
-          var url = URL.createObjectURL(f);
-          var im = new Image();
-          im.onload = function () {
-            state.batch.push({ img: im, w: im.naturalWidth, h: im.naturalHeight, name: (f.name || "anh").replace(/\.[^.]+$/, "") });
-            URL.revokeObjectURL(url);
-            if (--pending === 0) {
-              batchInfo.textContent = "Đã chọn " + state.batch.length + " ảnh để xử lý hàng loạt";
-              batchDlBtn.disabled = false;
-              toast("Đã chọn " + state.batch.length + " ảnh");
-            }
-          };
-          im.onerror = function () { URL.revokeObjectURL(url); if (--pending === 0 && state.batch.length) { batchInfo.textContent = "Đã chọn " + state.batch.length + " ảnh"; batchDlBtn.disabled = false; } };
-          im.src = url;
-        });
-      });
-      batchDlBtn.addEventListener("click", function () {
-        if (!state.batch.length) return;
-        batchDlBtn.disabled = true;
-        var i = 0, total = state.batch.length;
-        function next() {
-          if (i >= total) { batchDlBtn.disabled = false; toast("Đã tải xong " + total + " ảnh"); return; }
-          var item = state.batch[i++];
-          var out = document.createElement("canvas");
-          renderTo(out, item.w, item.h, item.img);
-          out.toBlob(function (blob) {
-            if (blob) {
-              var a = document.createElement("a");
-              a.href = URL.createObjectURL(blob);
-              a.download = "textmask-" + item.name + ".png";
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-            }
-            batchInfo.textContent = "Đang tải ảnh " + i + "/" + total + "…";
-            setTimeout(next, 450);
-          }, "image/png");
-        }
-        next();
-      });
       var dropZone = document.getElementById("dropZone");
       ["dragenter", "dragover"].forEach(function (ev) {
         dropZone.addEventListener(ev, function (e) { e.preventDefault(); dropZone.classList.add("dragging"); });
@@ -1271,6 +1241,7 @@
         document.fonts.ready.then(function () { render(); refreshThumbs(); });
       }
     </script>
-    <script src="./mobile-ui.js?v=20261113-9"></script>
+    <script src="./mobile-ui.js?v=20261113-10"></script>
+    <script src="./batch-workspace.js?v=20261113-10"></script>
   </body>
 </html>

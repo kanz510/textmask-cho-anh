@@ -1,0 +1,94 @@
+/* Textmask Studio V10 - queue and recipes in Light Liquid Glass */
+.recipe-controls {display:flex;flex-direction:column;gap:9px;}
+.recipe-controls .text-input,.recipe-controls select {width:100%;min-width:0;}
+.recipe-controls .btn {justify-content:center;min-height:45px;}
+.recipe-controls .recipe-actions {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;}
+.recipe-controls .recipe-actions .btn{min-width:0;font-size:12px;padding:9px 7px;}
+#recipeStatus {min-height:14px;margin:0;font-size:11px;color:#81748c;}
+.batch-library-top {display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.batch-library-top strong {font-size:14px;color:#463951;}
+.batch-library-top #batchQueueCount {font-size:12px;color:#a36c99;font-weight:650;}
+.batch-library-top .batch-small {min-height:38px;padding:7px 10px;font-size:11px;}
+.batch-workflow .batch-upload-queue {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+  max-height:255px;overflow-y:auto;overscroll-behavior:contain;
+  padding:3px;scrollbar-width:thin;
+}
+.queue-photo {position:relative;min-width:0;border-radius:14px;overflow:hidden;
+  border:1px solid rgba(159,137,183,.23);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 5px 16px rgba(95,73,124,.07);
+}
+.queue-photo.is-selected {border-color:#d58cba;box-shadow:0 0 0 2px rgba(222,151,198,.22),0 5px 14px rgba(95,73,124,.1);}
+.queue-photo-open {display:block;min-height:44px;width:100%;border:0;background:transparent;
+  padding:0;text-align:left;cursor:pointer;color:#443750;}
+.queue-photo-open img {display:block;width:100%;height:95px;object-fit:cover;background:#eeeaf5;}
+.queue-photo-detail {display:flex;flex-direction:column;gap:4px;padding:8px 9px 9px;min-width:0;}
+.queue-photo-detail strong {font-size:11px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;padding-right:18px;}
+.queue-photo-detail small {font-size:10px;line-height:1.3;font-weight:750;}
+.queue-photo-detail .queue-done {color:#4c907a;}
+.queue-photo-detail .queue-pending {color:#aa779a;}
+.queue-photo-remove {
+  display:grid;place-items:center;position:absolute;right:5px;top:5px;width:32px;height:32px;
+  border-radius:10px;border:1px solid rgba(255,255,255,.95);
+  background:rgba(255,255,255,.93);color:#76647c;
+  box-shadow:0 3px 10px rgba(49,35,74,.12);font-size:21px;line-height:1;cursor:pointer;
+}
+.batch-workflow .batch-empty {margin:0;padding:15px;border:1px dashed rgba(157,138,185,.35);
+  border-radius:14px;color:#8f819e;font-size:12px;text-align:center;line-height:1.6;
+  background:rgba(255,255,255,.6);}
+.batch-workflow .batch-empty[hidden]{display:none!important;}
+.batch-workflow .batch-storage-note {margin:0;font-size:10px;color:#91849c;line-height:1.5;}
+.batch-workflow .batch-settings {padding:13px;}
+.batch-workflow .batch-apply,.batch-workflow .batch-download,
+.batch-workflow .batch-pick {width:100%;justify-content:center;min-height:50px;white-space:normal;text-align:center;}
+.batch-workflow .batch-apply {
+  background:linear-gradient(115deg,#f2b9db,#e0abd9 51%,#c4b5f3);
+  color:#3d2946;border:1px solid rgba(255,255,255,.94);
+  box-shadow:0 8px 24px rgba(190,134,193,.2),inset 0 1px 0 #fff;
+}
+.batch-workflow .batch-download {
+  background:linear-gradient(120deg,#f3a9d2,#df91d0 54%,#aa9aee);
+  color:#fff;font-weight:800;border:1px solid #fff;
+  box-shadow:0 8px 24px rgba(200,136,190,.24),inset 0 1px 0 #fff;
+}
+.batch-workflow .batch-applied-status {
+  margin:0;color:#8a748e;font-size:11px;line-height:1.5;text-align:center;
+}
+.batch-workflow .batch-formula-library {
+  display:flex;flex-direction:column;gap:9px;
+  padding:13px;border-radius:16px;
+  background:linear-gradient(145deg,rgba(255,255,255,.87),rgba(246,238,253,.76));
+  border:1px solid rgba(146,126,173,.19);
+}
+.batch-formula-library strong {font-size:13px;color:#57445e;}
+.batch-formula-library .text-input {width:100%;min-width:0;}
+.batch-formula-library .btn {width:100%;justify-content:center;min-height:45px;}
+.batch-formula-library select {padding-right:27px;}
+.batch-workflow .batch-selected {margin:0;}
+#batchApplyDownload:disabled,#batchApplyAll:disabled {opacity:.45;cursor:not-allowed;}
+.batch-workflow .batch-upload-queue::-webkit-scrollbar {width:4px;}
+.batch-workflow .batch-upload-queue::-webkit-scrollbar-thumb {
+  background:rgba(170,133,180,.32);border-radius:20px;
+}
+@media(max-width:900px) {
+  .panel #recipeField .text-input {font-size:16px;color:#483a55;background:rgba(255,255,255,.92);}
+  .panel .batch-workflow {padding-top:9px;}
+  .panel .batch-formula-library .text-input {font-size:16px;color:#493c55;background:rgba(255,255,255,.92);}
+  .batch-workflow .batch-upload-queue {max-height:min(30dvh,250px);}
+}
+@media(max-width:390px) {
+  .batch-workflow .batch-upload-queue {gap:6px;}
+  .queue-photo-open img {height:86px;}
+  .queue-photo-detail {padding:7px;}
+  .batch-workflow .batch-formula-library {padding:11px;}
+}
+@media(prefers-reduced-motion:reduce) {
+ .queue-photo,.queue-photo-open,.queue-photo-remove{transition:none!important;}
+}
+
+/* Hidden download actions must override existing .btn display declarations. */
+#batchZipReadyLink[hidden],#desktopZipReadyLink[hidden] {display:none!important;}
+#batchZipReadyLink,#desktopZipReadyLink {justify-content:center;align-items:center;text-align:center;min-height:48px;}
+#batchZipReadyLink {width:100%;text-decoration:none;border-radius:15px;}
+#desktopZipReadyLink {text-decoration:none;}

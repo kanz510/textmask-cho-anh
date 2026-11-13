@@ -35,7 +35,7 @@
     style: { title: "Kiểu phủ", sub: "Bố cục, mẫu và hiệu ứng" },
     adjust: { title: "Tinh chỉnh", sub: "Cỡ chữ, độ mờ, màu sắc và logo" },
     export: { title: "Xuất ảnh", sub: "Lưu ảnh đúng độ phân giải gốc" },
-    batch: { title: "Sửa nhiều ảnh", sub: "Dùng một mẫu phủ cho toàn bộ ảnh" },
+    batch: { title: "Ảnh đã tải lên", sub: "Danh sách chờ · Áp dụng chung · Công thức đã lưu" },
     more: { title: "Thêm công cụ", sub: "Ảnh mẫu và chỉnh hàng loạt" }
   };
 
@@ -65,7 +65,7 @@
     '<p class="sheet-note photos-share-hint" id="saveToPhotosHint">Trên iPhone, chọn “Lưu hình ảnh” trong bảng chia sẻ để lưu vào album.</p>' +
     '<button type="button" class="btn" data-proxy="dlPng">↓ Tải PNG</button>' +
     '<button type="button" class="btn" data-proxy="dlJpg">↓ Tải JPG</button>' +
-    '<button type="button" class="btn wide" data-open-batch>▦ Sửa nhiều ảnh</button>' +
+    '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
     '</div><span class="img-info" id="mobileBatchInfo">Chưa chọn ảnh hàng loạt</span>';
   panel.appendChild(exportSection);
   var batchSection = document.createElement("section");
@@ -73,16 +73,25 @@
   batchSection.id = "mobileBatchSection";
   batchSection.hidden = true;
   batchSection.innerHTML =
-    '<p class="sheet-note">Sửa nhiều ảnh bằng cùng mẫu phủ chữ đang chọn.</p>' +
-    '<div class="batch-step"><b>1</b><div><strong>Chọn nhiều ảnh</strong><small>Chọn cùng lúc từ Thư viện ảnh hoặc Files.</small></div></div>' +
-    '<div class="batch-step"><b>2</b><div><strong>Chỉnh mẫu phủ</strong><small>Dùng các tab Chữ, Kiểu, Chỉnh để tạo mẫu chung.</small></div></div>' +
-    '<div class="batch-step"><b>3</b><div><strong>Áp dụng &amp; tải tất cả</strong><small>Tải riêng từng ảnh PNG ở độ phân giải gốc.</small></div></div>' +
-    '<button type="button" class="btn primary batch-pick" data-input="batchInput">＋ Chọn nhiều ảnh</button>' +
-    '<p class="batch-status" id="batchSelectedStatus" role="status" aria-live="polite">Chưa chọn ảnh nào</p>' +
-    '<div class="batch-settings"><strong>Mẫu phủ hiện tại</strong><p id="batchSettingsSummary"></p>' +
-    '<small>Tất cả ảnh dùng cùng chữ, kiểu, màu, mật độ, hiệu ứng và logo.</small></div>' +
-    '<button type="button" class="btn primary batch-apply" id="batchApplyDownload" data-proxy="batchDl" disabled>↓ Áp dụng &amp; tải tất cả PNG</button>' +
-    '<p class="sheet-note">Mẫu phủ được áp dụng khi tải. Không gửi ảnh lên máy chủ.</p>';
+    '<p class="sheet-note">Ảnh tải lên sẽ ở danh sách chờ. Bạn chỉnh công thức một lần rồi áp dụng cho tất cả ảnh.</p>' +
+    '<div class="batch-library-top"><strong>Đã tải lên <span id="batchQueueCount">0 ảnh</span></strong><button class="btn batch-small" type="button" id="batchClearQueue">Xoá tất cả</button></div>' +
+    '<button type="button" class="btn primary batch-pick" data-input="batchInput">＋ Tải thêm nhiều ảnh</button>' +
+    '<div id="batchUploadQueue" class="batch-upload-queue" aria-label="Danh sách ảnh đã tải lên"></div>' +
+    '<p class="batch-empty" id="batchQueueEmpty">Chưa có ảnh nào. Hãy tải ảnh lên để bắt đầu.</p>' +
+    '<p class="batch-status" id="batchSelectedStatus" aria-live="polite">Chưa chọn ảnh nào</p>' +
+    '<p class="sheet-note batch-storage-note" id="batchStorageNotice">Ảnh nằm chờ trong bộ nhớ của thiết bị, không gửi lên máy chủ.</p>' +
+    '<div class="batch-settings"><strong>Công thức đang chỉnh</strong><p id="batchSettingsSummary"></p>' +
+    '<small>Chỉnh trong tab Chữ, Kiểu, Chỉnh. Bấm Áp dụng để chốt công thức lên tất cả ảnh.</small></div>' +
+    '<button type="button" class="btn primary batch-apply" id="batchApplyAll" disabled>✓ Áp dụng công thức cho tất cả ảnh</button>' +
+    '<p id="batchAppliedStatus" class="batch-applied-status" role="status" aria-live="polite">Chưa áp dụng công thức</p>' +
+    '<button type="button" class="btn batch-download" id="batchApplyDownload" data-proxy="batchDl" disabled>↓ Tạo bộ ảnh ZIP (PNG)</button>' +
+    '<a class="btn primary batch-zip-ready" id="batchZipReadyLink" hidden>Tải ZIP vừa tạo</a>' +
+    '<div class="batch-formula-library"><strong>Lưu và dùng lại công thức</strong>' +
+    '<input id="batchRecipeName" class="text-input" type="text" maxlength="50" placeholder="Tên công thức..." aria-label="Tên công thức cần lưu"/>' +
+    '<button type="button" class="btn" id="batchRecipeSave">Lưu công thức hiện tại</button>' +
+    '<select id="batchRecipeSelect" class="text-input" aria-label="Chọn công thức đã lưu"><option value="">Chọn công thức đã lưu</option></select>' +
+    '<button type="button" class="btn" id="batchRecipeUse">Dùng công thức đã lưu</button></div>' +
+    '<p class="sheet-note">Tải một ZIP chứa các PNG ở kích thước gốc, sau đó giải nén trong ứng dụng Tệp trên iPhone.</p>';
   panel.appendChild(batchSection);
 
   /* Share the original-resolution PNG, not the reduced preview canvas.
@@ -173,7 +182,7 @@
     '<div class="sheet-actions">' +
     '<button type="button" class="btn primary" data-input="fileInput">Chọn ảnh mới</button>' +
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
-    '<button type="button" class="btn wide" data-open-batch>▦ Sửa nhiều ảnh</button>' +
+    '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
     '</div><p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
@@ -292,12 +301,12 @@
   });
 
   document.addEventListener("focusin", function (event) {
-    if (mq.matches && event.target === document.getElementById("textInput")) {
+    if (mq.matches && event.target.matches && event.target.matches("#textInput, #recipeNameInput, #batchRecipeName")) {
       document.body.classList.add("keyboard-open");
     }
   });
   document.addEventListener("focusout", function (event) {
-    if (event.target === document.getElementById("textInput")) {
+    if (event.target.matches && event.target.matches("#textInput, #recipeNameInput, #batchRecipeName")) {
       document.body.classList.remove("keyboard-open");
     }
   });
