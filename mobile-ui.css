@@ -450,3 +450,26 @@ input[type="range"] { width:100%; height:34px; accent-color:#f58acb; cursor:poin
 @media (prefers-reduced-motion:reduce) {
   *, *:before, *:after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; }
 }
+
+
+/* iPhone Photos share action. Keep the primary control large and glassy. */
+@media (max-width:900px) {
+  .sheet-actions .photos-share {
+    min-height:60px;
+    font-size:15px;
+    letter-spacing:.01em;
+    border-radius:18px;
+    color:#241326;
+    background:linear-gradient(115deg,#ffb3de 0%,#f085ce 48%,#b18ff5 100%);
+    box-shadow:0 8px 28px rgba(240,122,203,.35),inset 0 1px 0 rgba(255,255,255,.55);
+  }
+  .sheet-actions .photos-share-hint {
+    grid-column:1/-1;
+    margin:-2px 4px 8px;
+    color:#cabfd1;
+    text-align:center;
+    font-size:11px;
+    line-height:1.55;
+  }
+  .sheet-actions .photos-share[aria-busy="true"] { opacity:.72; }
+}

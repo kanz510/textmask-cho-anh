@@ -56,14 +56,96 @@
   exportSection.className = "sheet-section";
   exportSection.hidden = true;
   exportSection.innerHTML =
-    '<p class="sheet-note">Ảnh được xử lý trên thiết bị của bạn. Bản tải xuống sử dụng kích thước ảnh gốc, không phải kích thước bản xem trước.</p>' +
+    '<p class="sheet-note">Ảnh được xử lý trên thiết bị và xuất ở kích thước gốc, không phải bản xem trước.</p>' +
     '<div class="sheet-actions">' +
-    '<button type="button" class="btn primary" data-proxy="dlPng">↓ Tải PNG</button>' +
+    '<button type="button" class="btn primary wide photos-share" id="saveToPhotos" aria-describedby="saveToPhotosHint">▣ Lưu vào Ảnh</button>' +
+    '<p class="sheet-note photos-share-hint" id="saveToPhotosHint">Trên iPhone, chọn “Lưu hình ảnh” trong bảng chia sẻ để lưu vào album.</p>' +
+    '<button type="button" class="btn" data-proxy="dlPng">↓ Tải PNG</button>' +
     '<button type="button" class="btn" data-proxy="dlJpg">↓ Tải JPG</button>' +
     '<button type="button" class="btn wide" data-input="batchInput">⊞ Chọn nhiều ảnh</button>' +
     '<button type="button" class="btn wide" id="mobileBatchDownload" data-proxy="batchDl" disabled>↓ Tải tất cả ảnh (PNG)</button>' +
     '</div><span class="img-info" id="mobileBatchInfo">Chưa chọn ảnh hàng loạt</span>';
   panel.appendChild(exportSection);
+
+  /* Share the original-resolution PNG, not the reduced preview canvas.
+     PNG conversion is synchronous so the native share call remains inside
+     Safari's user-gesture handler (toBlob's async callback can lose activation). */
+  var saveToPhotosButton = document.getElementById("saveToPhotos");
+  function createSharePngFile() {
+    var out = document.createElement("canvas");
+    try {
+      renderTo(out, state.imgW, state.imgH);
+      var dataUrl = out.toDataURL("image/png");
+      var prefix = "data:image/png;base64,";
+      if (dataUrl.slice(0, prefix.length) !== prefix) {
+        throw new Error("Không thể tạo file PNG");
+      }
+      var binary = atob(dataUrl.slice(prefix.length));
+      var chunks = [];
+      // Chunk conversion avoids an extra enormous typed-array allocation.
+      for (var start = 0; start < binary.length; start += 32768) {
+        var part = binary.slice(start, start + 32768);
+        var bytes = new Uint8Array(part.length);
+        for (var i = 0; i < part.length; i++) bytes[i] = part.charCodeAt(i);
+        chunks.push(bytes);
+      }
+      var base = (state.imgName || "anh").replace(/[\\/:*?"<>|\x00-\x1f]/g, "-").slice(0, 70);
+      return new File(chunks, "textmask-" + base + ".png", { type: "image/png" });
+    } finally {
+      out.width = 0;
+      out.height = 0;
+    }
+  }
+
+  function saveToPhotos() {
+    if (saveToPhotosButton.disabled) return;
+    if (!state.img) {
+      toast("Hãy chọn ảnh trước khi lưu.");
+      return;
+    }
+    if (typeof navigator.share !== "function" || typeof File !== "function") {
+      toast("Trình duyệt chưa hỗ trợ chia sẻ ảnh. Hãy dùng Tải PNG.");
+      return;
+    }
+    saveToPhotosButton.disabled = true;
+    saveToPhotosButton.setAttribute("aria-busy", "true");
+
+    var file;
+    try {
+      file = createSharePngFile();
+      var shareData = { files: [file] };
+      if (typeof navigator.canShare === "function" && !navigator.canShare(shareData)) {
+        toast("Trình duyệt không hỗ trợ chia sẻ file ảnh. Hãy dùng Tải PNG.");
+        saveToPhotosButton.disabled = false;
+        saveToPhotosButton.removeAttribute("aria-busy");
+        return;
+      }
+      // Do not await any operation before navigator.share: Safari needs a user gesture.
+      var shareResult = navigator.share(shareData);
+      toast("Trong bảng chia sẻ, chọn “Lưu hình ảnh” để lưu vào album.");
+      Promise.resolve(shareResult).catch(function (error) {
+        if (error && error.name === "AbortError") return; // User cancelled.
+        if (error && error.name === "NotAllowedError") {
+          toast("Safari không cho phép chia sẻ lúc này. Thử lại hoặc dùng Tải PNG.");
+        } else {
+          toast("Chia sẻ chưa thành công. Bạn có thể dùng Tải PNG.");
+        }
+      }).then(function () {
+        saveToPhotosButton.disabled = false;
+        saveToPhotosButton.removeAttribute("aria-busy");
+      });
+    } catch (error) {
+      saveToPhotosButton.disabled = false;
+      saveToPhotosButton.removeAttribute("aria-busy");
+      if (error && error.name === "NotAllowedError") {
+        toast("Safari không cho phép chia sẻ lúc này. Thử lại hoặc dùng Tải PNG.");
+      } else {
+        toast("Không tạo được file để chia sẻ. Hãy dùng Tải PNG.");
+      }
+    }
+  }
+  saveToPhotosButton.addEventListener("click", saveToPhotos);
+
 
   var moreSection = document.createElement("section");
   moreSection.id = "mobileMoreSection";

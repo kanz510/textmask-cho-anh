@@ -12,7 +12,7 @@ Giao diện dark mode, mobile-first theo concept Liquid Glass: kính mờ nhiề
 - **Chữ:** nhập nội dung và chọn một trong 11 phông chữ.
 - **Kiểu:** 10 bố cục phủ chữ, 6 preset và 7 hiệu ứng.
 - **Chỉnh:** điều chỉnh cỡ chữ, độ mờ, khoảng cách, góc xoay, màu, logo và trang trí bằng các thanh trượt/nút chạm.
-- **Xuất:** tải PNG/JPG theo kích thước gốc, chọn nhiều ảnh và tải hàng loạt.
+- **Xuất:** nút **Lưu vào Ảnh** mở bảng chia sẻ hệ thống để chọn **Lưu hình ảnh** trên iPhone; vẫn có tải PNG/JPG theo kích thước gốc và xử lý nhiều ảnh.
 
 Thanh công cụ dạng kính nổi phía dưới. Bảng chỉnh sửa Liquid Glass có thể kéo xuống bằng tay nắm, đóng bằng nút **×** hoặc chạm vùng nền mờ. Nút **⋯** phía trên mở ảnh mẫu và chọn nhiều ảnh. Trên desktop, toàn bộ panel điều khiển vẫn xuất hiện cạnh khung ảnh như trước.
 
@@ -21,7 +21,7 @@ Có thể **Thêm vào Màn hình chính** trên trình duyệt hỗ trợ. Serv
 ## Tính năng lõi (không thay đổi)
 
 - 10 kiểu phủ chữ, 11 phông, 7 hiệu ứng, 6 mẫu có sẵn, logo watermark.
-- Tải PNG/JPG đúng kích thước ảnh gốc, xử lý nhiều ảnh.
+- Tải PNG/JPG đúng kích thước ảnh gốc, xử lý nhiều ảnh; chia sẻ file PNG với Web Share API để lưu vào Photos theo lựa chọn của người dùng (không có quyền tự ghi thẳng vào album).
 - Canvas vẽ và thuật toán xử lý ảnh vẫn giữ tại `index.html`. Giao diện mobile và điều hướng tách thành `mobile-ui.css`, `mobile-ui.js`. Giao diện dùng hiệu ứng kính mờ và chuyển động tôn trọng cài đặt Reduce Motion.
 
 ## Kiểm thử thủ công nên chạy trước khi phát hành
@@ -30,8 +30,8 @@ Có thể **Thêm vào Màn hình chính** trên trình duyệt hỗ trợ. Serv
 2. Chọn ảnh dọc/ngang, chọn ảnh mới từ Files; xem trước giữ đúng tỉ lệ.
 3. Mở các mục Chữ, Kiểu, Chỉnh, Xuất; đóng bằng nút × và nền mờ; thử bàn phím iOS khi nhập chữ.
 4. Đổi font, preset, hiệu ứng, slider và logo; ảnh preview cập nhật.
-5. Tải PNG/JPG; đối chiếu kích thước tệp gốc, thử chọn và tải nhiều ảnh.
-7. Add to Home Screen; tải một lượt khi có mạng, sau đó thử mở lại offline.
+5. Chọn **Xuất → Lưu vào Ảnh** trên iPhone Safari, chọn **Lưu hình ảnh** từ bảng chia sẻ rồi kiểm tra ảnh trong Photos; thử Huỷ và trình duyệt không hỗ trợ. Đối chiếu kích thước ảnh gốc, thử PNG/JPG và tải hàng loạt.
+6. Add to Home Screen; tải một lượt khi có mạng, sau đó thử mở lại offline.
 
 ## Phát triển
 
