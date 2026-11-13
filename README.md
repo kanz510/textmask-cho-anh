@@ -50,3 +50,8 @@ Trong mục **Chỉnh**, thanh **Mật độ phủ chữ** có 5 mức từ **Th
 ### Hiệu chỉnh mật độ theo ảnh tham chiếu
 
 Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn hơn rõ rệt để tạo lưới thoáng; kiểu rải ngẫu nhiên và logo lặp cũng giảm số lượng tương ứng. Các mức còn lại giảm dần khoảng cách để tăng mật độ. Kiểu dải ngang và cột dọc cũng dùng cùng nhịp khoảng cách tương ứng.
+
+
+### UI photo-first (V9)
+
+Mobile ẩn branding ở header, giảm chiều cao header/dock, tăng khung preview. Nút **Nhiều ảnh** ở trên bên trái mở bảng 3 bước: chọn ảnh, chỉnh mẫu chung rồi **Áp dụng & tải tất cả PNG**. Tải áp dụng thiết lập hiện tại cho toàn bộ ảnh; có trạng thái, số ảnh đã chọn. Giữ tính năng lưu ảnh và tải PNG/JPG.

@@ -7,6 +7,8 @@
   var dock = document.getElementById("mobileDock");
   var scrim = document.getElementById("appScrim");
   var more = document.getElementById("mobileMoreBtn");
+  var batchEntry = document.getElementById("mobileBatchEntry");
+  var batchCount = document.getElementById("mobileBatchCount");
   var input = document.getElementById("fileInput");
   if (!panel || !stage || !dock || !scrim || !input) return;
 
@@ -33,7 +35,8 @@
     style: { title: "Kiểu phủ", sub: "Bố cục, mẫu và hiệu ứng" },
     adjust: { title: "Tinh chỉnh", sub: "Cỡ chữ, độ mờ, màu sắc và logo" },
     export: { title: "Xuất ảnh", sub: "Lưu ảnh đúng độ phân giải gốc" },
-    more: { title: "Thêm công cụ", sub: "Ảnh mẫu, xử lý hàng loạt và trợ giúp" }
+    batch: { title: "Sửa nhiều ảnh", sub: "Dùng một mẫu phủ cho toàn bộ ảnh" },
+    more: { title: "Thêm công cụ", sub: "Ảnh mẫu và chỉnh hàng loạt" }
   };
 
   allFields.forEach(function (field) {
@@ -62,10 +65,25 @@
     '<p class="sheet-note photos-share-hint" id="saveToPhotosHint">Trên iPhone, chọn “Lưu hình ảnh” trong bảng chia sẻ để lưu vào album.</p>' +
     '<button type="button" class="btn" data-proxy="dlPng">↓ Tải PNG</button>' +
     '<button type="button" class="btn" data-proxy="dlJpg">↓ Tải JPG</button>' +
-    '<button type="button" class="btn wide" data-input="batchInput">⊞ Chọn nhiều ảnh</button>' +
-    '<button type="button" class="btn wide" id="mobileBatchDownload" data-proxy="batchDl" disabled>↓ Tải tất cả ảnh (PNG)</button>' +
+    '<button type="button" class="btn wide" data-open-batch>▦ Sửa nhiều ảnh</button>' +
     '</div><span class="img-info" id="mobileBatchInfo">Chưa chọn ảnh hàng loạt</span>';
   panel.appendChild(exportSection);
+  var batchSection = document.createElement("section");
+  batchSection.className = "sheet-section batch-workflow";
+  batchSection.id = "mobileBatchSection";
+  batchSection.hidden = true;
+  batchSection.innerHTML =
+    '<p class="sheet-note">Sửa nhiều ảnh bằng cùng mẫu phủ chữ đang chọn.</p>' +
+    '<div class="batch-step"><b>1</b><div><strong>Chọn nhiều ảnh</strong><small>Chọn cùng lúc từ Thư viện ảnh hoặc Files.</small></div></div>' +
+    '<div class="batch-step"><b>2</b><div><strong>Chỉnh mẫu phủ</strong><small>Dùng các tab Chữ, Kiểu, Chỉnh để tạo mẫu chung.</small></div></div>' +
+    '<div class="batch-step"><b>3</b><div><strong>Áp dụng &amp; tải tất cả</strong><small>Tải riêng từng ảnh PNG ở độ phân giải gốc.</small></div></div>' +
+    '<button type="button" class="btn primary batch-pick" data-input="batchInput">＋ Chọn nhiều ảnh</button>' +
+    '<p class="batch-status" id="batchSelectedStatus" role="status" aria-live="polite">Chưa chọn ảnh nào</p>' +
+    '<div class="batch-settings"><strong>Mẫu phủ hiện tại</strong><p id="batchSettingsSummary"></p>' +
+    '<small>Tất cả ảnh dùng cùng chữ, kiểu, màu, mật độ, hiệu ứng và logo.</small></div>' +
+    '<button type="button" class="btn primary batch-apply" id="batchApplyDownload" data-proxy="batchDl" disabled>↓ Áp dụng &amp; tải tất cả PNG</button>' +
+    '<p class="sheet-note">Mẫu phủ được áp dụng khi tải. Không gửi ảnh lên máy chủ.</p>';
+  panel.appendChild(batchSection);
 
   /* Share the original-resolution PNG, not the reduced preview canvas.
      PNG conversion is synchronous so the native share call remains inside
@@ -155,7 +173,7 @@
     '<div class="sheet-actions">' +
     '<button type="button" class="btn primary" data-input="fileInput">Chọn ảnh mới</button>' +
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
-    '<button type="button" class="btn wide" data-input="batchInput">Chọn nhiều ảnh</button>' +
+    '<button type="button" class="btn wide" data-open-batch>▦ Sửa nhiều ảnh</button>' +
     '</div><p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
@@ -163,20 +181,27 @@
   var title = document.getElementById("mobileSheetTitle");
   var subtitle = document.getElementById("mobileSheetSubtitle");
   var tabButtons = Array.prototype.slice.call(dock.querySelectorAll("[data-mobile-tab]"));
-  var mobileBatch = document.getElementById("mobileBatchDownload");
   var originalBatch = document.getElementById("batchDl");
   var originalBatchInfo = document.getElementById("batchInfo");
+  var batchApply = document.getElementById("batchApplyDownload");
+  var batchStatus = document.getElementById("batchSelectedStatus");
+  var batchSummary = document.getElementById("batchSettingsSummary");
 
   // The canvas dimensions and renderer are unchanged; only the status label is rehomed.
   var imgInfo = document.getElementById("imgInfo");
   if (imgInfo) stage.appendChild(imgInfo);
 
   function syncBatch() {
-    if (mobileBatch && originalBatch) mobileBatch.disabled = originalBatch.disabled;
-    var copy = document.getElementById("mobileBatchInfo");
-    if (copy && originalBatchInfo) {
-      copy.textContent = originalBatchInfo.textContent || "Chưa chọn ảnh hàng loạt";
-    }
+    batchApply.disabled = originalBatch.disabled;
+    var msg = originalBatchInfo.textContent || "Chưa chọn ảnh nào";
+    batchStatus.textContent = msg;
+    var match = msg.match(/Đã chọn\s+(\d+)\s+ảnh/);
+    batchCount.hidden = !match;
+    batchCount.textContent = match ? match[1] : "";
+    var watermark = document.getElementById("textInput").value.trim() || "Watermark";
+    batchSummary.textContent = "“" + watermark + "” · " +
+      document.getElementById("styleName").textContent + " · " +
+      document.getElementById("gapVal").textContent;
   }
   if (originalBatch) {
     new MutationObserver(syncBatch).observe(originalBatch, { attributes: true, attributeFilter: ["disabled"] });
@@ -191,10 +216,12 @@
       button.setAttribute("aria-expanded", button.dataset.mobileTab === activeGroup && document.body.classList.contains("sheet-open") ? "true" : "false");
     });
     more.setAttribute("aria-expanded", activeGroup === "more" && document.body.classList.contains("sheet-open") ? "true" : "false");
+    batchEntry.setAttribute("aria-expanded", activeGroup === "batch" && document.body.classList.contains("sheet-open") ? "true" : "false");
   }
   function renderSections(group) {
     allFields.forEach(function (field) { field.hidden = mq.matches && field.dataset.mobileGroup !== group; });
     exportSection.hidden = !mq.matches || group !== "export";
+    batchSection.hidden = !mq.matches || group !== "batch";
     moreSection.hidden = !mq.matches || group !== "more";
   }
   function openSheet(group, trigger) {
@@ -213,6 +240,7 @@
     panel.removeAttribute("aria-hidden");
     document.body.classList.add("sheet-open");
     panel.scrollTop = 0;
+    if (group === "batch") syncBatch();
     resetTabs();
     closeButton.focus({ preventScroll: true });
   }
@@ -242,6 +270,7 @@
     });
   });
   more.addEventListener("click", function () { openSheet("more", more); });
+  batchEntry.addEventListener("click", function () { openSheet("batch", batchEntry); });
   closeButton.addEventListener("click", closeSheet);
   scrim.addEventListener("click", closeSheet);
   document.addEventListener("keydown", function (event) {
@@ -252,6 +281,7 @@
 
   // Proxy the existing, tested controls instead of duplicating export/upload logic.
   panel.addEventListener("click", function (event) {
+    if (event.target.closest("[data-open-batch]")) { openSheet("batch", batchEntry); return; }
     var proxy = event.target.closest("[data-proxy], [data-input]");
     if (!proxy || proxy.disabled || !mq.matches) return;
     var id = proxy.dataset.proxy || proxy.dataset.input;
@@ -286,6 +316,7 @@
     } else {
       allFields.forEach(function (field) { field.hidden = false; });
       exportSection.hidden = true;
+      batchSection.hidden = true;
       moreSection.hidden = true;
       panel.inert = false;
       panel.removeAttribute("aria-hidden");
