@@ -528,3 +528,20 @@ header.intro{border-color:#fff;background:linear-gradient(125deg,rgba(255,255,25
 .sheet-actions .photos-share{color:#fff;background:linear-gradient(115deg,#efa6d0,#d98bc9 48%,#a99af0);box-shadow:0 8px 28px rgba(197,135,191,.25),inset 0 1px 0 #fff}
 .sheet-actions .photos-share-hint{color:#837990}.toast{color:#41384d;background:rgba(255,255,255,.97);border-color:#fff}
 }
+
+
+/* Density slider labels */
+.density-scale {
+  display:flex;
+  justify-content:space-between;
+  margin-top:7px;
+  color:#91899c;
+  font-size:11px;
+  font-weight:650;
+  letter-spacing:.01em;
+}
+.density-hint { margin-top:5px; }
+@media(max-width:900px) {
+  .panel .density-scale { color:#8b8198; }
+  .panel .density-hint { color:#8b8198; }
+}

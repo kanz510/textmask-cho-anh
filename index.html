@@ -276,7 +276,7 @@
         * { transition: none !important; }
       }
     </style>
-    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-5" />
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261113-6" />
   </head>
   <body>
     <div class="wrap">
@@ -371,8 +371,10 @@
           </div>
 
           <div class="field">
-            <div class="label"><span>Khoảng cách giữa các chữ</span><span class="val" id="gapVal"></span></div>
-            <input type="range" id="gapRange" min="0.5" max="2.6" step="0.1" value="1.1" aria-label="Khoảng cách giữa các chữ" />
+            <div class="label"><span>Mật độ phủ chữ</span><span class="val" id="gapVal">Hơi thưa</span></div>
+            <input type="range" id="gapRange" min="1" max="5" step="1" value="2" aria-label="Mật độ phủ chữ, từ thưa đến dày" />
+            <div class="density-scale" aria-hidden="true"><span>Thưa</span><span>Dày</span></div>
+            <p class="hint density-hint">Chọn mức phủ thoáng hoặc dày hơn. Áp dụng cho chữ và logo.</p>
           </div>
 
           <div class="field">
@@ -511,7 +513,7 @@
         font: FONTS[0],
         sizePct: 3.1,
         opacity: 55,
-        gap: 1.1,
+        gap: 2.35,
         angle: 0,
         color: "#ffffff",
         color2: "#ffd94d",
@@ -913,7 +915,7 @@
           color2: hexToRgba(state.color2, 0.88),
           backColor: "rgba(20,20,20,0.48)",
           effect: state.effect,
-          gap: 0.9, angleDeg: 0, brackets: false, tw: 0
+          gap: state.gap, angleDeg: 0, brackets: false, tw: 0
         });
       }
       function refreshThumbs() {
@@ -1082,7 +1084,23 @@
       }
       bindRange("sizeRange", "sizeVal", function (v) { return v.toFixed(1).replace(".", ",") + "% chiều ngang ảnh"; }, function (v) { state.sizePct = v; });
       bindRange("opacityRange", "opacityVal", function (v) { return Math.round(v) + "%"; }, function (v) { state.opacity = v; });
-      bindRange("gapRange", "gapVal", function (v) { return v.toFixed(1).replace(".", ",") + "×"; }, function (v) { state.gap = v; });
+      var densityRange = document.getElementById("gapRange");
+      var densityValue = document.getElementById("gapVal");
+      var densityNames = ["Thưa", "Hơi thưa", "Vừa", "Dày", "Rất dày"];
+      function densityToGap(level) {
+        // A larger spacing factor means fewer marks per image.
+        return 3.25 - level * 0.45;
+      }
+      function updateDensity() {
+        var level = Math.max(1, Math.min(5, Math.round(parseFloat(densityRange.value))));
+        densityRange.value = level;
+        state.gap = densityToGap(level);
+        densityValue.textContent = densityNames[level - 1];
+        render();
+        refreshThumbs();
+      }
+      densityRange.addEventListener("input", updateDensity);
+      updateDensity();
       bindRange("angleRange", "angleVal", function (v) { return Math.round(v) + "°"; }, function (v) { state.angle = v; });
 
       var swatchWrap = document.getElementById("swatches");

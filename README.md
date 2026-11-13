@@ -40,3 +40,8 @@ Mở `index.html` trên trình duyệt là có thể chạy phần lõi. Để k
 ## Giấy phép
 
 Phông chữ và mẫu dùng trong công cụ là tài nguyên mở miễn phí, lấy cảm hứng phong cách Meitu, không phải tài sản VIP của Meitu.
+
+
+### Điều chỉnh mật độ phủ chữ
+
+Trong mục **Chỉnh**, thanh **Mật độ phủ chữ** có 5 mức từ **Thưa** đến **Rất dày**. Mặc định là **Hơi thưa** để ảnh thoáng hơn. Điều khiển này điều chỉnh khoảng cách lặp của chữ/logo trên các kiểu phủ dạng lưới, chéo, lệch và rải ngẫu nhiên; không thay đổi cỡ chữ hay độ mờ.
