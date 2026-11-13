@@ -34,7 +34,7 @@
     text: { title: "Chữ & phông", sub: "Nhập nội dung và chọn kiểu chữ" },
     style: { title: "Kiểu phủ", sub: "Bố cục, mẫu và hiệu ứng" },
     adjust: { title: "Tinh chỉnh", sub: "Cỡ chữ, độ mờ, màu sắc và logo" },
-    export: { title: "Lưu vào Ảnh", sub: "Chọn ảnh đã sửa để lưu vào album iPhone" },
+    export: { title: "Lưu vào Ảnh", sub: "Ảnh gốc, chỉnh tay hoặc dùng công thức đều lưu được" },
     batch: { title: "Ảnh đã tải lên", sub: "Danh sách chờ · Áp dụng chung · Công thức đã lưu" },
     more: { title: "Thêm công cụ", sub: "Ảnh mẫu và chỉnh hàng loạt" }
   };
@@ -59,16 +59,16 @@
   exportSection.className = "sheet-section edited-exports";
   exportSection.hidden = true;
   exportSection.innerHTML =
-    '<p class="sheet-note">Chọn ảnh đã sửa rồi bấm <strong>Lưu vào Ảnh</strong> để đưa ảnh vào album iPhone.</p>' +
+    '<p class="sheet-note">Tất cả ảnh tải lên đều ở đây, kể cả ảnh chưa chỉnh, chỉnh tay và áp dụng công thức. Chọn ảnh để <strong>Lưu vào Ảnh</strong>.</p>' +
     '<div id="exportSelectedPanel" class="export-selected-panel" hidden>' +
       '<strong id="exportSelectedName">Ảnh đã chọn</strong>' +
       '<button type="button" id="exportSelectedShare" class="btn primary export-share" disabled>▣ Lưu vào Ảnh</button>' +
       '<p id="exportPrepStatus" role="status" aria-live="polite">Đang chuẩn bị ảnh…</p>' +
       '<small>Trong bảng chia sẻ iPhone, chọn “Lưu hình ảnh” để lưu vào ứng dụng Ảnh.</small>' +
     '</div>' +
-    '<div class="export-edited-heading"><strong>Ảnh đã sửa <span id="exportEditedCount">0 ảnh</span></strong></div>' +
-    '<div class="edited-photos-grid" id="exportEditedGrid" role="group" aria-label="Chọn ảnh đã sửa để lưu vào album"></div>' +
-    '<p id="exportEditedEmpty" class="batch-empty">Chưa có ảnh đã sửa. Vào Nhiều ảnh → Áp dụng chung để chọn công thức đã lưu.</p>' +
+    '<div class="export-edited-heading"><strong>Ảnh đã tải lên <span id="exportEditedCount">0 ảnh</span></strong></div>' +
+    '<div class="edited-photos-grid" id="exportEditedGrid" role="group" aria-label="Chọn ảnh để lưu vào album"></div>' +
+    '<p id="exportEditedEmpty" class="batch-empty">Chưa có ảnh tải lên. Bấm Nhiều ảnh để thêm ảnh, hoặc chọn ảnh từ tab Ảnh.</p>' +
     '<button type="button" class="btn" data-open-batch>▦ Quản lý ảnh đã tải lên</button>';
   panel.appendChild(exportSection);
   var batchSection = document.createElement("section");

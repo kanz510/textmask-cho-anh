@@ -56,6 +56,15 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 
 - **Nhiều ảnh:** Tải ảnh lên để xếp hàng chờ. Thanh trên cùng có nút **Áp dụng chung** ngay cạnh **Xoá tất cả**; không cần kéo xuống.
 - **Áp dụng chung:** Bấm nút để mở bảng các **công thức đã lưu**; chọn công thức rồi xác nhận áp dụng cho toàn bộ ảnh chờ. Nếu chưa lưu công thức, vào **Chỉnh → Kho công thức** để lưu trước.
-- **Xuất:** Chỉ hiện ảnh đã áp dụng công thức. Chọn một ảnh, bấm nút chính **Lưu vào Ảnh**, rồi chọn **Lưu hình ảnh** trong bảng chia sẻ iPhone. Không hiện nút tải file.
+- **Xuất:** Hiển thị tất cả ảnh đã tải lên, gồm **Chưa chỉnh**, **Đã chỉnh thủ công**, **Đã áp dụng công thức**. Chọn từng ảnh và bấm **Lưu vào Ảnh**, sau đó chọn **Lưu hình ảnh** trong bảng chia sẻ iPhone. Ảnh chưa chỉnh được xuất nguyên bản không thêm watermark.
 - **Đã loại bỏ:** ZIP, tải hàng loạt, hai nút PNG/JPG, và nút tải file trong tab Xuất. Mục Ảnh tải lên cũng không còn phần Kho công thức trùng lặp; công thức chỉ được lưu/quản lý trong tab Chỉnh.
 - Hàng chờ và các công thức lưu cục bộ qua IndexedDB, không gửi ảnh lên máy chủ. Safari có thể thu hồi dữ liệu lưu cục bộ khi dọn dữ liệu hoặc thiếu dung lượng.
+
+
+### V13 · Tất cả ảnh đều xuất được
+
+- Ảnh được chọn từ tab **Ảnh** (một ảnh) cũng được tự đưa vào danh sách **Đã tải lên**. Ảnh nhiều từ mục **Nhiều ảnh** tiếp tục hoạt động bình thường.
+- Tab **Xuất** không còn lọc theo công thức. Mọi ảnh đã tải lên đều hiện, phân biệt **Chưa chỉnh**, **Đã chỉnh thủ công**, và **Đã áp dụng công thức**.
+- Nếu chưa sửa gì, ảnh được xuất không watermark. Khi chọn một ảnh trong danh sách chờ và dùng các công cụ Chữ/Kiểu/Chỉnh, cấu hình chỉnh tay được lưu riêng vào chính ảnh đó (IndexedDB), không bắt buộc tạo/lưu công thức.
+- Chọn lại ảnh đã chỉnh để tiếp tục sửa; các ảnh còn lại giữ nguyên chỉnh sửa của chúng. Khi nhấn **Áp dụng chung**, công thức đã chọn được gắn vào toàn bộ ảnh chờ như trước.
+- **Lưu vào Ảnh** vẫn dùng Web Share của Safari và yêu cầu chọn **Lưu hình ảnh** từ bảng chia sẻ hệ thống.

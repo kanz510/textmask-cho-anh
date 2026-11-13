@@ -14,6 +14,8 @@
   var galleryTicket = 0;
   var pickerSelectedRecipe = "";
   var chooserTrigger = null;
+  var manualTimer = null;
+  var manualPendingId = null;
   function resetExportBlob() {
     exportTicket++;
     exportBlob = null;
@@ -118,7 +120,7 @@
     if (!db) return Promise.resolve();
     return promiseStore("photos","put",{
       id:item.id, name:item.name, file:item.file,
-      date:item.date, applied:item.applied
+      date:item.date, applied:item.applied, editKind:item.editKind
     }).catch(function () { persistenceError = true; storageWarning(); });
   }
   function dropPhoto(item) {
@@ -136,6 +138,7 @@
       file:record.file,
       date:record.date || Date.now(),
       applied:record.applied || null,
+      editKind:record.editKind || (record.applied ? "recipe" : "original"),
       url:URL.createObjectURL(record.file)
     };
   }
@@ -161,7 +164,7 @@
         name.textContent = item.name;
         var mark = document.createElement("small");
         mark.className = item.applied ? "queue-done" : "queue-pending";
-        mark.textContent = item.applied ? "✓ Đã áp dụng" : "○ Chờ áp dụng";
+        mark.textContent = photoStatus(item);
         detail.appendChild(name);
         detail.appendChild(mark);
         select.appendChild(detail);
@@ -178,6 +181,8 @@
     }
     var total = queue.length;
     var applied = queue.filter(function (item) { return !!item.applied; }).length;
+    var originals = total - applied;
+    var manual = queue.filter(function (item) { return item.applied && item.editKind === "manual"; }).length;
     window.state.batch = queue;
     queueCount.textContent = total + " ảnh";
     if (queueEmpty) queueEmpty.hidden = total > 0;
@@ -189,14 +194,18 @@
     if (clearBtn) clearBtn.disabled = !total || busy;
     if (appliedStatus) {
       appliedStatus.textContent = !total ? "Danh sách đang trống"
-        : applied === total ? "✓ Đã áp dụng cho " + total + " ảnh. Xem và tải riêng trong tab Xuất."
-        : "Đã áp dụng " + applied + "/" + total + " ảnh · " + (total - applied) + " ảnh còn chờ.";
+        : applied === total ? "✓ Có " + total + " ảnh đã chỉnh. Mở Xuất để lưu vào album."
+        : applied + " ảnh đã chỉnh (" + manual + " chỉnh tay), " + originals + " ảnh gốc. Tất cả đều có trong Xuất.";
     }
     statusEl.textContent = total
-      ? "Đã chọn " + total + " ảnh · " + applied + " đã áp dụng"
+      ? "Đã tải lên " + total + " ảnh · " + applied + " đã chỉnh"
       : "Chưa chọn ảnh nào";
     storageWarning();
     renderEditedGallery();
+  }
+  function photoStatus(item) {
+    if (!item.applied) return "○ Chưa chỉnh";
+    return item.editKind === "manual" ? "✎ Đã chỉnh thủ công" : "✓ Đã áp dụng công thức";
   }
   function findPhoto(id) {
     return queue.find(function (p) { return p.id === id; });
@@ -213,16 +222,24 @@
   async function previewPhoto(id) {
     var item = findPhoto(id);
     if (!item) return;
+    flushManualEdit();
     queueSelected = id;
+    window.textmaskPreviewRaw = !item.applied;
     updateQueue();
     try {
       var image = await loadPicture(item.file);
       if (queueSelected !== id || !findPhoto(id)) return;
       window.setImage(image,image.naturalWidth,image.naturalHeight,safeName(item.name),false);
-      notify("Đang xem trước: " + item.name + ". Công thức hiện tại chưa tự áp dụng cho cả danh sách.");
-    } catch (error) { notify(error.message); }
+      if (item.applied) {
+        var logo = await getLogo(item.applied);
+        if (queueSelected !== id || !findPhoto(id)) return;
+        applyState(item.applied,logo);
+        syncEditor();
+      }
+      notify("Đang xem trước: " + item.name + " · " + photoStatus(item));
+    } catch (error) { notify("Không xem được ảnh: " + error.message); }
   }
-  async function addPhotos(fileList) {
+  async function addPhotos(fileList, selectFirst) {
     if (busy) return;
     resetExportBlob();
     var files = Array.prototype.slice.call(fileList || []).filter(function (file) { return /^image\//.test(file.type); });
@@ -232,15 +249,16 @@
     files.forEach(function (file) {
       var record = {
         id:"p" + Date.now().toString(36) + "-" + (++uidCounter).toString(36) + "-" + Math.random().toString(36).slice(2,7),
-        name:file.name || "anh", file:file, date:Date.now(), applied:null
+        name:file.name || "anh", file:file, date:Date.now(), applied:null, editKind:"original"
       };
       var photo = makePhoto(record);
       queue.push(photo);
       added.push(photo);
     });
-    updateQueue();
+    if ((first || selectFirst) && added.length) {
+      previewPhoto(added[0].id);
+    } else updateQueue();
     await Promise.all(added.map(persistPhoto));
-    if (first && added.length) previewPhoto(added[0].id);
     notify("Đã đưa " + added.length + " ảnh vào mục Đã tải lên.");
   }
   async function removePhoto(id) {
@@ -249,7 +267,12 @@
     if (!item) return;
     resetExportBlob();
     queue = queue.filter(function (p) { return p.id !== id; });
-    if (queueSelected === id) queueSelected = null;
+    if (queueSelected === id) {
+      clearTimeout(manualTimer);
+      manualTimer = null;
+      manualPendingId = null;
+      queueSelected = null;
+    }
     await dropPhoto(item);
     updateQueue();
     if (!queueSelected && queue.length) previewPhoto(queue[0].id);
@@ -264,7 +287,11 @@
     resetExportBlob();
     queue.forEach(function (item) { if (item.url) URL.revokeObjectURL(item.url); clearPhotoThumb(item); });
     queue=[];
+    clearTimeout(manualTimer);
+    manualTimer = null;
+    manualPendingId = null;
     queueSelected=null;
+    window.textmaskPreviewRaw=false;
     if (db) {
       try { await promiseStore("photos","clear"); }
       catch (error) { persistenceError=true; }
@@ -370,6 +397,7 @@
   async function useRecipe(recipe) {
     if (!recipe) return;
     var image=await getLogo(recipe);
+    window.textmaskPreviewRaw=false;
     applyState(recipe,image);
     syncEditor();
   }
@@ -420,6 +448,7 @@
       queue.forEach(function (item) {
         clearPhotoThumb(item);
         item.applied = JSON.parse(JSON.stringify(saved.config));
+        item.editKind = "recipe";
       });
       await Promise.all(queue.map(persistPhoto));
       notify("Đã áp dụng công thức “" + saved.name + "” cho " + queue.length + " ảnh.");
@@ -488,6 +517,7 @@
     if (!item) { notify("Hãy chọn công thức đã lưu.");return; }
     try {
       await useRecipe(item.config);
+      window.dispatchEvent(new Event("textmask:editor-updated"));
       saveInputs.forEach(function (el) { if (el) el.value=item.name; });
       updateSavedLists(item.name);
       if (recipeStatus) recipeStatus.textContent="Đang dùng công thức “"+name+"”.";
@@ -507,32 +537,39 @@
     if (recipeStatus) recipeStatus.textContent="Đã xoá công thức “"+name+"”.";
   }
   async function renderPhoto(item) {
-    var image=await loadPicture(item.file);
-    var recipe=item.applied;
-    var logo=await getLogo(recipe);
-    if(document.fonts&&document.fonts.load) {
+    var image = await loadPicture(item.file);
+    var recipe = item.applied;
+    var canvas = document.createElement("canvas");
+    if (!recipe) {
+      // Untouched images must be exported without adding any watermark.
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);
+    } else {
+      var logo = await getLogo(recipe);
+      if(document.fonts && document.fonts.load) {
+        try {
+          var font=window.fontById(recipe.font);
+          await document.fonts.load(font.weight+" 16px "+font.stack);
+        } catch(error) {}
+      }
+      var previous = snapshotState();
       try {
-        var font=window.fontById(recipe.font);
-        await document.fonts.load(font.weight+" 16px "+font.stack);
-      } catch(error) {}
+        applyState(recipe,logo);
+        window.renderTo(canvas,image.naturalWidth,image.naturalHeight,image);
+      } finally { Object.assign(window.state,previous); }
     }
-    var previous=snapshotState();
-    var canvas=document.createElement("canvas");
-    try {
-      applyState(recipe,logo);
-      window.renderTo(canvas,image.naturalWidth,image.naturalHeight,image);
-    } finally {Object.assign(window.state,previous);}
     return new Promise(function(resolve,reject) {
       canvas.toBlob(function(blob) {
         canvas.width=0;canvas.height=0;
-        if(blob)resolve(blob);
-        else reject(new Error("Không tạo được PNG của "+item.name));
+        if(blob) resolve(blob);
+        else reject(new Error("Không tạo được ảnh: "+item.name));
       },"image/png");
     });
   }
-
   function completedPhotos() {
-    return queue.filter(function (item) { return !!item.applied; });
+    // Export tab lists every uploaded photo, including untouched originals.
+    return queue.slice();
   }
   async function createEditedThumbnail(item) {
     if (!item.applied) return null;
@@ -591,14 +628,16 @@
       card.className="edited-photo-card"+(item.id===exportSelectedId?" is-selected":"");
       card.dataset.exportPick=item.id;
       card.setAttribute("aria-pressed",item.id===exportSelectedId?"true":"false");
-      card.setAttribute("aria-label","Chọn ảnh đã sửa: "+item.name);
+      card.setAttribute("aria-label","Chọn ảnh: "+item.name+" · "+photoStatus(item));
       var img=document.createElement("img");
       img.alt="";img.loading="lazy";img.src=item.editedThumbUrl||item.url;
       var name=document.createElement("strong");name.textContent=item.name;
-      var mark=document.createElement("span");mark.className="edited-photo-marker";mark.textContent="✓ Đã áp dụng";
+      var mark=document.createElement("span");
+      mark.className="edited-photo-marker"+(item.applied ? " is-edited" : " is-original");
+      mark.textContent=photoStatus(item);
       card.appendChild(img);card.appendChild(name);card.appendChild(mark);
       exportGrid.appendChild(card);
-      if(!item.editedThumbUrl) tasks.push({item:item,img:img});
+      if(item.applied && !item.editedThumbUrl) tasks.push({item:item,img:img});
     });
     if(busy) return;
     var run=++galleryTicket;
@@ -613,7 +652,7 @@
   }
   async function prepareSelectedImage() {
     var item=findPhoto(exportSelectedId);
-    if(!item || !item.applied || busy) return;
+    if(!item || busy) return;
     if(exportBlob) return;
     resetExportBlob();
     var ticket=exportTicket, id=item.id;
@@ -628,7 +667,7 @@
       exportShare.disabled=!supported;
       exportShare.textContent="▣ Lưu vào Ảnh";
       exportPrep.textContent=supported
-        ? "✓ Ảnh sẵn sàng. Bấm Lưu vào Ảnh rồi chọn “Lưu hình ảnh”."
+        ? "✓ " + (item.applied ? "Ảnh đã chỉnh" : "Ảnh gốc") + " sẵn sàng. Bấm Lưu vào Ảnh rồi chọn “Lưu hình ảnh”."
         : "Trình duyệt này không hỗ trợ chia sẻ ảnh vào album. Hãy mở trên Safari iPhone.";
     } catch(error) {
       if(ticket!==exportTicket) return;
@@ -638,7 +677,7 @@
   }
   function chooseEditedPhoto(id) {
     var item=findPhoto(id);
-    if(!item || !item.applied)return;
+    if(!item)return;
     if(exportSelectedId!==id){exportSelectedId=id;resetExportBlob();}
     renderEditedGallery();
     prepareSelectedImage();
@@ -661,6 +700,75 @@
     }catch(error){notify("Không thể mở bảng chia sẻ. Hãy thử lại trên Safari.");}
   }
 
+
+  /* Per-photo manual editing: slider, text, swatches and style interactions
+     save the current editor recipe on the selected image only. */
+  function flushManualEdit() {
+    clearTimeout(manualTimer);
+    manualTimer=null;
+    var id=manualPendingId;
+    manualPendingId=null;
+    if (!id || id!==queueSelected || busy || window.state.isDemo) return;
+    var item=findPhoto(id);
+    if (!item) return;
+    var config;
+    try { config=captureRecipe(); }
+    catch(error) { notify("Chưa lưu được chỉnh sửa: "+(error.message||"Kiểm tra logo."));return; }
+    item.applied=config;
+    item.editKind="manual";
+    clearPhotoThumb(item);
+    window.textmaskPreviewRaw=false;
+    if (exportSelectedId===id) resetExportBlob();
+    updateQueue();
+    persistPhoto(item);
+  }
+  function scheduleManualEdit() {
+    if (busy || !queueSelected || window.state.isDemo) return;
+    window.textmaskPreviewRaw=false;
+    clearTimeout(manualTimer);
+    manualPendingId=queueSelected;
+    manualTimer=setTimeout(flushManualEdit,260);
+  }
+  function manualInputTarget(target) {
+    return !!(target && target.closest && target.closest("#editorPanel") &&
+      target.closest("#textInput, #sizeRange, #opacityRange, #gapRange, #angleRange, #colorCustom, #color2Custom"));
+  }
+  function manualClickTarget(target) {
+    return !!(target && target.closest && target.closest("#editorPanel") &&
+      target.closest("#styleGrid, #fontChips, #presetGrid, #effectChips, #gradRow .grad-chip, #swatches .swatch, #bracketToggle, #capsToggle, #logoToggle"));
+  }
+  document.addEventListener("input",function(event) {
+    if (manualInputTarget(event.target) && queueSelected) window.textmaskPreviewRaw=false;
+  },true);
+  document.addEventListener("click",function(event) {
+    if (manualClickTarget(event.target) && queueSelected) window.textmaskPreviewRaw=false;
+  },true);
+  document.addEventListener("input",function(event) {
+    if (manualInputTarget(event.target)) scheduleManualEdit();
+  });
+  document.addEventListener("click",function(event) {
+    if (manualClickTarget(event.target)) scheduleManualEdit();
+  });
+  window.addEventListener("textmask:editor-updated",function(){
+    if (queueSelected) {
+      window.textmaskPreviewRaw=false;
+      window.render();
+      scheduleManualEdit();
+    }
+  });
+  window.addEventListener("textmask:before-single-upload",flushManualEdit);
+  window.addEventListener("textmask:single-upload",function(event){
+    if (event.detail && event.detail.file) addPhotos([event.detail.file],true);
+  });
+  window.addEventListener("textmask:before-demo",flushManualEdit);
+  window.addEventListener("textmask:demo-selected",function(){
+    manualPendingId=null;
+    clearTimeout(manualTimer);
+    queueSelected=null;
+    window.textmaskPreviewRaw=false;
+    updateQueue();
+  });
+  window.addEventListener("pagehide",flushManualEdit);
 
   photoInput.addEventListener("change",function(event){
     var files=Array.prototype.slice.call(event.target.files||[]);
@@ -689,6 +797,7 @@
   });
   exportShare.addEventListener("click",shareSelectedImage);
   window.addEventListener("textmask:export-open",function(){
+    flushManualEdit();
     renderEditedGallery();
     if(exportSelectedId)prepareSelectedImage();
   });

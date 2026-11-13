@@ -190,3 +190,12 @@
   opacity:.57;cursor:not-allowed;box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
 }
 .export-selected-panel strong{font-size:13px;}
+
+/* V13: distinguish untouched originals from manual and shared-recipe edits. */
+.edited-photo-marker.is-original {
+  color:#887b92;
+  background:rgba(244,239,249,.6);
+}
+.edited-photo-marker.is-edited {color:#4f9981;}
+.queue-photo-detail .queue-done {color:#4f9981;}
+.queue-photo-detail .queue-pending {color:#96849d;}
