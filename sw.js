@@ -1,6 +1,6 @@
 /* Scope-relative, network-first offline support for GitHub Pages. */
-const CACHE_NAME = "textmask-studio-v11-20261113";
-const OFFLINE_FILES = ["./", "./index.html", "./mobile-ui.css?v=20261113-11", "./mobile-ui.js?v=20261113-11", "./batch-workspace.css?v=20261113-11", "./batch-workspace.js?v=20261113-11", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png", "./manifest.webmanifest"];
+const CACHE_NAME = "textmask-studio-v12-20261113";
+const OFFLINE_FILES = ["./", "./index.html", "./mobile-ui.css?v=20261113-11", "./mobile-ui.js?v=20261113-12", "./batch-workspace.css?v=20261113-12", "./batch-workspace.js?v=20261113-12", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

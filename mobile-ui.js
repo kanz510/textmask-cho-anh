@@ -34,7 +34,7 @@
     text: { title: "Chữ & phông", sub: "Nhập nội dung và chọn kiểu chữ" },
     style: { title: "Kiểu phủ", sub: "Bố cục, mẫu và hiệu ứng" },
     adjust: { title: "Tinh chỉnh", sub: "Cỡ chữ, độ mờ, màu sắc và logo" },
-    export: { title: "Ảnh đã sửa", sub: "Chọn ảnh để tải riêng hoặc lưu vào Ảnh" },
+    export: { title: "Lưu vào Ảnh", sub: "Chọn ảnh đã sửa để lưu vào album iPhone" },
     batch: { title: "Ảnh đã tải lên", sub: "Danh sách chờ · Áp dụng chung · Công thức đã lưu" },
     more: { title: "Thêm công cụ", sub: "Ảnh mẫu và chỉnh hàng loạt" }
   };
@@ -59,17 +59,16 @@
   exportSection.className = "sheet-section edited-exports";
   exportSection.hidden = true;
   exportSection.innerHTML =
-    '<p class="sheet-note">Chọn một ảnh đã áp dụng công thức, sau đó tải riêng ảnh đó về máy.</p>' +
-    '<div class="export-edited-heading"><strong>Ảnh đã sửa <span id="exportEditedCount">0 ảnh</span></strong></div>' +
-    '<div class="edited-photos-grid" id="exportEditedGrid" role="group" aria-label="Chọn ảnh đã sửa để tải"></div>' +
-    '<p id="exportEditedEmpty" class="batch-empty">Chưa có ảnh đã sửa. Vào Nhiều ảnh → Áp dụng chung để chọn công thức đã lưu.</p>' +
+    '<p class="sheet-note">Chọn ảnh đã sửa rồi bấm <strong>Lưu vào Ảnh</strong> để đưa ảnh vào album iPhone.</p>' +
     '<div id="exportSelectedPanel" class="export-selected-panel" hidden>' +
       '<strong id="exportSelectedName">Ảnh đã chọn</strong>' +
-      '<p id="exportPrepStatus" role="status" aria-live="polite">Chọn ảnh để chuẩn bị tải.</p>' +
-      '<a id="exportSelectedDownload" class="btn primary export-download" hidden>↓ Tải ảnh đã chọn</a>' +
-      '<button type="button" id="exportSelectedShare" class="btn export-share" disabled>▣ Lưu vào Ảnh</button>' +
-      '<small>Trên iPhone, chọn “Lưu hình ảnh” trong bảng chia sẻ.</small>' +
+      '<button type="button" id="exportSelectedShare" class="btn primary export-share" disabled>▣ Lưu vào Ảnh</button>' +
+      '<p id="exportPrepStatus" role="status" aria-live="polite">Đang chuẩn bị ảnh…</p>' +
+      '<small>Trong bảng chia sẻ iPhone, chọn “Lưu hình ảnh” để lưu vào ứng dụng Ảnh.</small>' +
     '</div>' +
+    '<div class="export-edited-heading"><strong>Ảnh đã sửa <span id="exportEditedCount">0 ảnh</span></strong></div>' +
+    '<div class="edited-photos-grid" id="exportEditedGrid" role="group" aria-label="Chọn ảnh đã sửa để lưu vào album"></div>' +
+    '<p id="exportEditedEmpty" class="batch-empty">Chưa có ảnh đã sửa. Vào Nhiều ảnh → Áp dụng chung để chọn công thức đã lưu.</p>' +
     '<button type="button" class="btn" data-open-batch>▦ Quản lý ảnh đã tải lên</button>';
   panel.appendChild(exportSection);
   var batchSection = document.createElement("section");
@@ -88,13 +87,6 @@
     '<p class="batch-status" id="batchSelectedStatus" aria-live="polite">Chưa chọn ảnh nào</p>' +
     '<p id="batchAppliedStatus" class="batch-applied-status" role="status" aria-live="polite">Chưa áp dụng công thức</p>' +
     '<p class="sheet-note batch-storage-note" id="batchStorageNotice">Ảnh nằm chờ trong bộ nhớ của thiết bị, không gửi lên máy chủ.</p>' +
-    '<div class="batch-formula-library"><strong>Kho công thức đã lưu</strong>' +
-      '<p class="sheet-note">Tạo công thức trong tab Chỉnh → Kho công thức, sau đó bấm Áp dụng chung ở phía trên.</p>' +
-      '<input id="batchRecipeName" class="text-input" type="text" maxlength="50" placeholder="Tên công thức mới..." aria-label="Tên công thức cần lưu"/>' +
-      '<button type="button" class="btn" id="batchRecipeSave">Lưu công thức hiện tại</button>' +
-      '<select id="batchRecipeSelect" class="text-input" aria-label="Chọn công thức đã lưu"><option value="">Chọn công thức đã lưu</option></select>' +
-      '<button type="button" class="btn" id="batchRecipeUse">Dùng công thức để chỉnh mẫu hiện tại</button>' +
-    '</div>' +
     '<div id="batchRecipePicker" class="recipe-picker-overlay" hidden>' +
       '<div class="recipe-picker-card" role="dialog" aria-modal="true" aria-labelledby="recipePickerTitle">' +
         '<div class="recipe-picker-heading"><strong id="recipePickerTitle">Áp dụng công thức chung</strong>' +
@@ -211,12 +203,12 @@
   });
 
   document.addEventListener("focusin", function (event) {
-    if (mq.matches && event.target.matches && event.target.matches("#textInput, #recipeNameInput, #batchRecipeName")) {
+    if (mq.matches && event.target.matches && event.target.matches("#textInput, #recipeNameInput")) {
       document.body.classList.add("keyboard-open");
     }
   });
   document.addEventListener("focusout", function (event) {
-    if (event.target.matches && event.target.matches("#textInput, #recipeNameInput, #batchRecipeName")) {
+    if (event.target.matches && event.target.matches("#textInput, #recipeNameInput")) {
       document.body.classList.remove("keyboard-open");
     }
   });

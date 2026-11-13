@@ -56,6 +56,6 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 
 - **Nhiều ảnh:** Tải ảnh lên để xếp hàng chờ. Thanh trên cùng có nút **Áp dụng chung** ngay cạnh **Xoá tất cả**; không cần kéo xuống.
 - **Áp dụng chung:** Bấm nút để mở bảng các **công thức đã lưu**; chọn công thức rồi xác nhận áp dụng cho toàn bộ ảnh chờ. Nếu chưa lưu công thức, vào **Chỉnh → Kho công thức** để lưu trước.
-- **Xuất:** Chỉ hiện các ảnh đã được áp dụng công thức; nhấn chọn một ảnh. Hệ thống chuẩn bị ảnh xuất đúng kích thước rồi hiện **Tải ảnh đã chọn**. Nhấn lần lượt từng ảnh nếu cần. Có nút **Lưu vào Ảnh** mở bảng chia sẻ iPhone để chọn Lưu hình ảnh.
-- **Đã loại bỏ:** Tạo/tải ZIP, tải hàng loạt, hai nút PNG và JPG ở tab Xuất.
+- **Xuất:** Chỉ hiện ảnh đã áp dụng công thức. Chọn một ảnh, bấm nút chính **Lưu vào Ảnh**, rồi chọn **Lưu hình ảnh** trong bảng chia sẻ iPhone. Không hiện nút tải file.
+- **Đã loại bỏ:** ZIP, tải hàng loạt, hai nút PNG/JPG, và nút tải file trong tab Xuất. Mục Ảnh tải lên cũng không còn phần Kho công thức trùng lặp; công thức chỉ được lưu/quản lý trong tab Chỉnh.
 - Hàng chờ và các công thức lưu cục bộ qua IndexedDB, không gửi ảnh lên máy chủ. Safari có thể thu hồi dữ liệu lưu cục bộ khi dọn dữ liệu hoặc thiếu dung lượng.

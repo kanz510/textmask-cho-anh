@@ -9,7 +9,6 @@
   var queueSelected = null;
   var busy = false;
   var exportSelectedId = null;
-  var exportBlobUrl = null;
   var exportBlob = null;
   var exportTicket = 0;
   var galleryTicket = 0;
@@ -17,13 +16,12 @@
   var chooserTrigger = null;
   function resetExportBlob() {
     exportTicket++;
-    if (exportBlobUrl) URL.revokeObjectURL(exportBlobUrl);
-    exportBlobUrl = null;
     exportBlob = null;
-    var link = document.getElementById("exportSelectedDownload");
     var share = document.getElementById("exportSelectedShare");
-    if (link) { link.hidden = true; link.removeAttribute("href"); }
-    if (share) share.disabled = true;
+    if (share) {
+      share.disabled = true;
+      share.textContent = "▣ Lưu vào Ảnh";
+    }
   }
   function clearPhotoThumb(item) {
     item.thumbRevision = (item.thumbRevision || 0) + 1;
@@ -51,16 +49,15 @@
   var exportPanel = document.getElementById("exportSelectedPanel");
   var exportName = document.getElementById("exportSelectedName");
   var exportPrep = document.getElementById("exportPrepStatus");
-  var exportDownload = document.getElementById("exportSelectedDownload");
   var exportShare = document.getElementById("exportSelectedShare");
   var batchBadge = document.getElementById("mobileBatchCount");
   var appliedStatus = document.getElementById("batchAppliedStatus");
   var queueNotice = document.getElementById("batchStorageNotice");
   var clearBtn = document.getElementById("batchClearQueue");
-  var saveButtons = [document.getElementById("recipeSaveBtn"), document.getElementById("batchRecipeSave")];
-  var saveInputs = [document.getElementById("recipeNameInput"), document.getElementById("batchRecipeName")];
-  var loadButtons = [document.getElementById("recipeLoadBtn"), document.getElementById("batchRecipeUse")];
-  var recipeSelects = [document.getElementById("recipeSavedSelect"), document.getElementById("batchRecipeSelect")];
+  var saveButtons = [document.getElementById("recipeSaveBtn")];
+  var saveInputs = [document.getElementById("recipeNameInput")];
+  var loadButtons = [document.getElementById("recipeLoadBtn")];
+  var recipeSelects = [document.getElementById("recipeSavedSelect")];
   var deleteBtn = document.getElementById("recipeDeleteBtn");
   var recipeStatus = document.getElementById("recipeStatus");
   var logoDecodeCache = Object.create(null);
@@ -616,25 +613,27 @@
   }
   async function prepareSelectedImage() {
     var item=findPhoto(exportSelectedId);
-    if(!item || !item.applied || busy)return;
-    if(exportBlob && exportBlobUrl && exportDownload.getAttribute("href")===exportBlobUrl)return;
+    if(!item || !item.applied || busy) return;
+    if(exportBlob) return;
     resetExportBlob();
-    var ticket=exportTicket,id=item.id;
+    var ticket=exportTicket, id=item.id;
     exportName.textContent=item.name;
     exportPrep.textContent="Đang chuẩn bị ảnh ở độ phân giải gốc…";
+    exportShare.textContent="Đang chuẩn bị ảnh…";
     try {
       var blob=await renderPhoto(item);
-      if(ticket!==exportTicket || id!==exportSelectedId || !findPhoto(id))return;
+      if(ticket!==exportTicket || id!==exportSelectedId || !findPhoto(id)) return;
       exportBlob=blob;
-      exportBlobUrl=URL.createObjectURL(blob);
-      exportDownload.href=exportBlobUrl;
-      exportDownload.download="textmask-"+safeName(item.name)+".png";
-      exportDownload.hidden=false;
-      exportShare.disabled=!(typeof navigator.share==="function" && typeof File==="function");
-      exportPrep.textContent="✓ Ảnh đã sẵn sàng. Chạm Tải ảnh đã chọn.";
-    }catch(error) {
-      if(ticket!==exportTicket)return;
-      exportPrep.textContent="Không tạo được ảnh: "+(error.message||"Thử lại.");
+      var supported=typeof navigator.share==="function" && typeof File==="function";
+      exportShare.disabled=!supported;
+      exportShare.textContent="▣ Lưu vào Ảnh";
+      exportPrep.textContent=supported
+        ? "✓ Ảnh sẵn sàng. Bấm Lưu vào Ảnh rồi chọn “Lưu hình ảnh”."
+        : "Trình duyệt này không hỗ trợ chia sẻ ảnh vào album. Hãy mở trên Safari iPhone.";
+    } catch(error) {
+      if(ticket!==exportTicket) return;
+      exportShare.textContent="▣ Lưu vào Ảnh";
+      exportPrep.textContent="Không thể tạo ảnh: "+(error.message||"Hãy thử lại.");
     }
   }
   function chooseEditedPhoto(id) {
@@ -652,14 +651,14 @@
       var file=new File([exportBlob],"textmask-"+safeName(item.name)+".png",{type:"image/png"});
       var data={files:[file]};
       if(navigator.canShare && !navigator.canShare(data)) {
-        notify("Safari không chia sẻ được ảnh này. Hãy bấm Tải ảnh đã chọn.");
+        notify("Safari không hỗ trợ chia sẻ ảnh này vào album.");
         return;
       }
       Promise.resolve(navigator.share(data)).catch(function(error){
         if(error && error.name!=="AbortError")
-          notify("Không thể chia sẻ. Hãy bấm Tải ảnh đã chọn.");
+          notify("Không thể mở bảng chia sẻ. Hãy thử lại trên Safari.");
       });
-    }catch(error){notify("Không thể chia sẻ. Hãy bấm Tải ảnh đã chọn.");}
+    }catch(error){notify("Không thể mở bảng chia sẻ. Hãy thử lại trên Safari.");}
   }
 
 

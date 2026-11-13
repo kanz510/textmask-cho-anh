@@ -44,16 +44,11 @@
 .batch-workflow .batch-applied-status {
   margin:0;color:#8a748e;font-size:11px;line-height:1.5;text-align:center;
 }
-.batch-workflow .batch-formula-library {
-  display:flex;flex-direction:column;gap:9px;
-  padding:13px;border-radius:16px;
-  background:linear-gradient(145deg,rgba(255,255,255,.87),rgba(246,238,253,.76));
-  border:1px solid rgba(146,126,173,.19);
-}
-.batch-formula-library strong {font-size:13px;color:#57445e;}
-.batch-formula-library .text-input {width:100%;min-width:0;}
-.batch-formula-library .btn {width:100%;justify-content:center;min-height:45px;}
-.batch-formula-library select {padding-right:27px;}
+.batch-workflow 
+
+
+
+
 .batch-workflow .batch-selected {margin:0;}
 .batch-workflow .batch-upload-queue::-webkit-scrollbar {width:4px;}
 .batch-workflow .batch-upload-queue::-webkit-scrollbar-thumb {
@@ -62,14 +57,14 @@
 @media(max-width:900px) {
   .panel #recipeField .text-input {font-size:16px;color:#483a55;background:rgba(255,255,255,.92);}
   .panel .batch-workflow {padding-top:9px;}
-  .panel .batch-formula-library .text-input {font-size:16px;color:#493c55;background:rgba(255,255,255,.92);}
+  .panel 
   .batch-workflow .batch-upload-queue {max-height:min(30dvh,250px);}
 }
 @media(max-width:390px) {
   .batch-workflow .batch-upload-queue {gap:6px;}
   .queue-photo-open img {height:86px;}
   .queue-photo-detail {padding:7px;}
-  .batch-workflow .batch-formula-library {padding:11px;}
+  .batch-workflow 
 }
 @media(prefers-reduced-motion:reduce) {
  .queue-photo,.queue-photo-open,.queue-photo-remove{transition:none!important;}
@@ -167,11 +162,11 @@
   border:1px solid rgba(155,124,175,.16);
   background:rgba(255,255,255,.8);
 }
-.export-selected-panel[hidden],#exportSelectedDownload[hidden],#exportEditedEmpty[hidden] {display:none!important;}
+.export-selected-panel[hidden],#exportEditedEmpty[hidden] {display:none!important;}
 .export-selected-panel strong {color:#47394f;font-size:12px;overflow-wrap:anywhere;}
 .export-selected-panel p {margin:0;color:#89788e;font-size:11px;line-height:1.5;}
 .export-selected-panel small {color:#928396;font-size:10px;}
-.export-download,.export-share {min-height:48px;width:100%;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;}
+
 .export-share:disabled {opacity:.45;}
 @media(max-width:390px) {
   .batch-library-top {gap:4px;}
@@ -180,3 +175,18 @@
   .batch-top-actions .btn {font-size:10px;padding:7px 6px;}
   .edited-photo-card img {height:98px;}
 }
+
+/* V12: iPhone Photos-first export; no file-download control. */
+.export-selected-panel {gap:10px;}
+.export-selected-panel .export-share {
+  display:flex;align-items:center;justify-content:center;
+  width:100%;min-height:56px;padding:12px 16px;
+  border:1px solid rgba(255,255,255,.95);border-radius:16px;
+  color:#fff;font-size:15px;font-weight:800;text-align:center;
+  background:linear-gradient(118deg,#f1a4cf,#d985c7 55%,#aa96ed);
+  box-shadow:0 9px 24px rgba(193,130,190,.27),inset 0 1px 0 rgba(255,255,255,.75);
+}
+.export-selected-panel .export-share:disabled {
+  opacity:.57;cursor:not-allowed;box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+}
+.export-selected-panel strong{font-size:13px;}
