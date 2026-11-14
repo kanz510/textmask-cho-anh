@@ -744,10 +744,9 @@ canvas#preview{max-width:calc(100% - 8px);max-height:calc(100% - 8px);border-rad
   .dock-item { min-height:0; }
 }
 
-/* V13.7 · PWA root height fix based on actual on-device measurements.
-   innerHeight=874 and dock.bottom=874, but html.clientHeight=812.
-   The dock is already correctly anchored. Extend the HTML document and
-   editor canvas to innerHeight instead of negatively offsetting the dock. */
+/* V13.8: iOS standalone reports either 812 or 874px on the same device.
+   Use physical screen height for the app, and offset fixed dock by only
+   the measured difference between screen.height and window.innerHeight. */
 @media (max-width:900px) {
   #pwaDockDebug {
     position:fixed;
@@ -776,9 +775,9 @@ canvas#preview{max-width:calc(100% - 8px);max-height:calc(100% - 8px);border-rad
     height:var(--app-height,100dvh);
   }
   html.pwa-viewport-fix .mobile-dock {
-    bottom:0;
+    bottom:calc(0px - var(--pwa-viewport-gap,0px));
   }
   html.pwa-viewport-fix .panel {
-    bottom:var(--mobile-safe-bottom,20px);
+    bottom:calc(var(--mobile-safe-bottom,20px) - var(--pwa-viewport-gap,0px));
   }
 }

@@ -109,7 +109,7 @@
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
     '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
     '<button type="button" class="btn wide" id="appRefreshBtn">↻ Cập nhật ứng dụng</button>' +
-    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.7 · Chạm để xem số đo dock</p>' +
+    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.8 · Chạm để xem số đo dock</p>' +
     '<p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
@@ -264,6 +264,7 @@
       "document.documentElement.clientHeight: " + root.clientHeight,
       "mobileDock.getBoundingClientRect().bottom: " + rect.bottom.toFixed(1),
       "HTML root CSS H: " + getComputedStyle(root).height,
+      "Applied gap: " + getComputedStyle(root).getPropertyValue("--pwa-viewport-gap").trim(),
       "innerHeight − clientHeight: " + (window.innerHeight - root.clientHeight).toFixed(1),
       "screen-bottom − dock-bottom: " + (screen.height - rect.bottom).toFixed(1)
     ].join("\n");
@@ -275,6 +276,7 @@
     var root = document.documentElement;
     if (!mq.matches) {
       root.style.removeProperty("--app-height");
+      root.style.removeProperty("--pwa-viewport-gap");
       root.classList.remove("pwa-viewport-fix");
       dockDebug.hidden = true;
       return;
@@ -288,13 +290,22 @@
     var standalone = window.matchMedia("(display-mode: standalone)").matches ||
       navigator.standalone === true;
     var portrait = window.matchMedia("(orientation: portrait)").matches;
+    var fix = standalone && portrait && !keyboardUp;
     if (keyboardUp) {
       root.style.setProperty("--app-height", Math.round(vv.height) + "px");
-    } else if (standalone && portrait) {
-      // 100dvh is 812px on this iOS PWA; innerHeight correctly reports 874px.
-      root.style.setProperty("--app-height", Math.round(viewportH) + "px");
+      root.style.setProperty("--pwa-viewport-gap", "0px");
+    } else if (fix) {
+      // iOS PWA alternates between 812px and 874px viewport measurements.
+      // Use the physical portrait screen height and compensate only when
+      // fixed positioning is anchored to the shorter layout viewport.
+      var physicalH = screen.height;
+      var gap = physicalH - viewportH;
+      var valid = physicalH > 0 && gap >= 0 && gap <= 140;
+      root.style.setProperty("--app-height", Math.round(valid ? physicalH : viewportH) + "px");
+      root.style.setProperty("--pwa-viewport-gap", Math.round(valid ? gap : 0) + "px");
     } else {
       root.style.removeProperty("--app-height");
+      root.style.removeProperty("--pwa-viewport-gap");
     }
     root.classList.toggle("pwa-viewport-fix", standalone && portrait);
     dockDebug.hidden = !(standalone && portrait);
@@ -354,7 +365,7 @@
   // Does not mutate styling, IndexedDB or photos, and stays out of the editor.
   var versionInfo = document.getElementById("appVersionInfo");
   if (versionInfo) {
-    var versionLabel = "Textmask Studio V13.7 · Chạm để xem số đo dock";
+    var versionLabel = "Textmask Studio V13.8 · Chạm để xem số đo dock";
     versionInfo.setAttribute("role", "button");
     versionInfo.setAttribute("tabindex", "0");
     versionInfo.setAttribute("aria-label", "Xem hoặc ẩn số đo bố cục iPhone");
@@ -373,7 +384,7 @@
         return typeof number === "number" ? Math.round(number * 10) / 10 : "—";
       };
       var metricLines = [
-        "V13.7 · Thông số PWA (chạm để ẩn)",
+        "V13.8 · Thông số PWA (chạm để ẩn)",
         "Standalone: " + (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true),
         "Screen H: " + screen.height + " · Inner H: " + window.innerHeight,
         "Visual H: " + (vv ? round(vv.height) : "—") +
@@ -408,7 +419,7 @@
       var response = await fetch(probe.toString(), {cache:"no-store"});
       if (!response.ok) throw new Error("Không kết nối được máy chủ");
       var source = await response.text();
-      if (source.indexOf("mobile-ui.css?v=20261114-7") === -1)
+      if (source.indexOf("mobile-ui.css?v=20261114-8") === -1)
         throw new Error("Bản mới chưa có trên máy chủ");
       if ("serviceWorker" in navigator) {
         var reg = await navigator.serviceWorker.getRegistration();
@@ -419,11 +430,11 @@
       if ("caches" in window) {
         var names = await caches.keys();
         await Promise.all(names.filter(function (name) {
-          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-7-20261114";
+          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-8-20261114";
         }).map(function (name) { return caches.delete(name); }));
       }
       var next = new URL("./index.html", location.href);
-      next.searchParams.set("v", "13.7");
+      next.searchParams.set("v", "13.8");
       next.searchParams.set("fresh", Date.now().toString(36));
       location.replace(next.toString());
     } catch (error) {
