@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#f8f5ff" />
-    <meta name="textmask-build" content="13.9" />
+    <meta name="textmask-build" content="13.9.1" />
     <!-- Legacy V13.4–V13.6 update-button compatibility markers (not loaded assets):
          mobile-ui.css?v=20261114-4
          mobile-ui.css?v=20261114-5
@@ -364,7 +364,7 @@
             <div class="grad-row" id="gradRow">
               <span class="hint">Màu phụ (cho Viền / Chuyển màu / Nổi 3D):</span>
               <button class="grad-chip" type="button" data-g="#ffd94d" style="background:linear-gradient(90deg,#ffffff,#ffd94d)" aria-pressed="true">Vàng kim</button>
-              <button class="grad-chip" type="button" data-g="#141414" style="background:linear-gradient(90deg,#ffffff,#141414)" aria-pressed="false">Đen</button>
+              <button class="grad-chip" type="button" data-g="#141414" style="background:linear-gradient(90deg,#8a8a8a,#141414)" aria-pressed="false">Đen</button>
               <button class="grad-chip" type="button" data-g="#ff7a3d" style="background:linear-gradient(90deg,#ffd94d,#ff7a3d)" aria-pressed="false">Hoàng hôn</button>
               <button class="grad-chip" type="button" data-g="#b06ee8" style="background:linear-gradient(90deg,#ff5c9e,#b06ee8)" aria-pressed="false">Hồng tím</button>
               <button class="grad-chip" type="button" data-g="#2b7de0" style="background:linear-gradient(90deg,#39c2d7,#2b7de0)" aria-pressed="false">Xanh biển</button>
@@ -501,7 +501,7 @@
       var EFFECTS = [
         { id: "none",     name: "Thường",    css: "" },
         { id: "outline",  name: "Viền",      css: "-webkit-text-stroke:1px #141414; paint-order:stroke fill;" },
-        { id: "shadow",   name: "Bóng đổ",   css: "text-shadow:2px 3px 0 rgba(0,0,0,.45);" },
+        { id: "shadow",   name: "Bóng đổ",   css: "text-shadow:1px 1px 1px rgba(0,0,0,.28);" },
         { id: "glow",     name: "Phát sáng", css: "text-shadow:0 0 6px #ff5c9e,0 0 14px #ff5c9e;" },
         { id: "gradient", name: "Chuyển màu", css: "background:linear-gradient(90deg,#ffd94d,#ff7a3d);-webkit-background-clip:text;background-clip:text;color:transparent;" },
         { id: "pop",      name: "Nổi 3D",    css: "text-shadow:2px 2px 0 #ffd94d,4px 4px 0 rgba(20,20,20,.55);" },
@@ -513,7 +513,7 @@
         { name: "Neon hồng", desc: "Đậm + phát sáng hồng, phủ chéo xiên", sampleFont: "'Montserrat', sans-serif", sampleCss: "font-weight:800;color:#ff5c9e;text-shadow:0 0 8px rgba(255,92,158,.8);", apply: { font: "mont", effect: "glow", color: "#ff5c9e", color2: "#ffd94d", style: "diagonal", brackets: false, caps: false } },
         { name: "Poster viền đậm", desc: "Chữ poster + viền đen, viết hoa", sampleFont: "'Anton', sans-serif", sampleCss: "-webkit-text-stroke:1px #141414;color:#fff;letter-spacing:.04em;", apply: { font: "anton", effect: "outline", color: "#ffffff", color2: "#141414", style: "grid", brackets: false, caps: true } },
         { name: "Chữ ký mềm", desc: "Viết tay tròn + bóng đổ, xen kẽ", sampleFont: "'Pacifico', cursive", sampleCss: "color:#8a4b2a;text-shadow:1px 2px 0 rgba(0,0,0,.25);", apply: { font: "pacifico", effect: "shadow", color: "#ffffff", color2: "#ffd94d", style: "stagger", brackets: false, caps: false } },
-        { name: "Nổi 3D vàng", desc: "Đậm + đổ bóng lớp vàng, chữ lớn", sampleFont: "'Bebas Neue', sans-serif", sampleCss: "color:#fff;text-shadow:2px 2px 0 #c9930a,4px 4px 0 rgba(20,20,20,.5);letter-spacing:.05em;", apply: { font: "bebas", effect: "pop", color: "#ffffff", color2: "#ffd94d", style: "big", brackets: false, caps: true } },
+        { name: "Nổi 3D vàng", desc: "Đậm + đổ bóng lớp vàng, chữ lớn", sampleFont: "'Bebas Neue', sans-serif", sampleCss: "color:#3b2a10;text-shadow:2px 2px 0 #e0b04a,4px 4px 0 rgba(20,20,20,.25);letter-spacing:.05em;", apply: { font: "bebas", effect: "pop", color: "#ffffff", color2: "#ffd94d", style: "big", brackets: false, caps: true } },
         { name: "Nhãn nền tối", desc: "Chữ trắng trên dải nền mờ, dải ngang", sampleFont: "'Be Vietnam Pro', sans-serif", sampleCss: "background:rgba(20,20,20,.6);color:#fff;border-radius:6px;padding:0 6px;font-weight:600;", apply: { font: "be", effect: "backdrop", color: "#ffffff", color2: "#ffd94d", style: "bands", brackets: false, caps: false } }
       ];
 
@@ -678,6 +678,10 @@
         // on a portrait photo when using a small watermark font.
         var stepX = tw + fp * (4.2 + o.gap * 2.6);
         var stepY = fp * (8.2 + o.gap * 2.8);
+        if (o.compact) { // Thumbnail preview spacing, independent of image density
+          stepX = tw + fp * 2.4;
+          stepY = fp * 3.8;
+        }
         var diag = Math.sqrt(W * W + H * H);
         var cx = W / 2, cy = H / 2;
         var x, y, row, col;
@@ -966,7 +970,8 @@
         g.fillStyle = "rgba(255,255,255,0.16)"; g.fillRect(0, H * 0.66, W, H * 0.34);
         g.beginPath(); g.arc(W * 0.78, H * 0.72, 20, 0, Math.PI * 2); g.fillStyle = "#2e2e33"; g.fill();
         g.beginPath(); g.arc(W * 0.62, H * 0.8, 15, 0, Math.PI * 2); g.fillStyle = "#dfe9ee"; g.fill();
-        var fontPx = Math.max(8, W * 0.052 * st.scale);
+        var thumbScale = { center: 1.6, big: 2.3, corners: 1, frame: 0.9 }[st.id] || 1;
+        var fontPx = Math.max(8, W * 0.045 * thumbScale);
         drawPattern(g, W, H, {
           style: st.id,
           text: displayText(),
@@ -976,7 +981,8 @@
           color2: hexToRgba(state.color2, 0.88),
           backColor: "rgba(20,20,20,0.48)",
           effect: state.effect,
-          gap: state.gap, angleDeg: 0, brackets: false, tw: 0
+          gap: state.gap, angleDeg: 0, brackets: false, tw: 0,
+          compact: true
         });
       }
       var styleThumbFrame = 0;
