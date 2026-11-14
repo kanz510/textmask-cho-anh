@@ -199,3 +199,7 @@
 .edited-photo-marker.is-edited {color:#4f9981;}
 .queue-photo-detail .queue-done {color:#4f9981;}
 .queue-photo-detail .queue-pending {color:#96849d;}
+
+#recipeStatus:empty { display:none; }
+.export-empty-note { font-size:12px; line-height:1.5; font-weight:400; color:#82788f; background:none; border:0; padding:5px 0; margin:4px 0 10px; }
+#batchAppliedStatus[hidden], #batchSelectedStatus[hidden], #batchInfo[hidden] { display:none!important; }

@@ -202,6 +202,8 @@
     window.state.batch = queue;
     queueCount.textContent = total + " ảnh";
     if (queueEmpty) queueEmpty.hidden = total > 0;
+    if (appliedStatus) appliedStatus.hidden = total === 0;
+    if (statusEl) statusEl.hidden = total === 0;
     if (quickApply) quickApply.disabled = !total || busy;
     if (batchBadge) {
       batchBadge.hidden = !total;

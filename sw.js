@@ -1,11 +1,11 @@
-/* Textmask Studio V13.9: fresh HTML and versioned assets, offline fallback. */
-const CACHE_NAME = "textmask-studio-v13-9-20261114";
+/* Textmask Studio V13.10: fresh HTML and versioned assets, offline fallback. */
+const CACHE_NAME = "textmask-studio-v13-10-20261114";
 const OFFLINE_FILES = [
   "./", "./index.html",
-  "./mobile-ui.css?v=20261114-9",
-  "./mobile-ui.js?v=20261114-9",
-  "./batch-workspace.css?v=20261114-9",
-  "./batch-workspace.js?v=20261114-9",
+  "./mobile-ui.css?v=20261114-10",
+  "./mobile-ui.js?v=20261114-10",
+  "./batch-workspace.css?v=20261114-10",
+  "./batch-workspace.js?v=20261114-10",
   "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png",
   "./manifest.webmanifest"
 ];

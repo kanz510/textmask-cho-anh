@@ -68,8 +68,8 @@
     '</div>' +
     '<div class="export-edited-heading"><strong>Ảnh đã tải lên <span id="exportEditedCount">0 ảnh</span></strong></div>' +
     '<div class="edited-photos-grid" id="exportEditedGrid" role="group" aria-label="Chọn ảnh để lưu vào album"></div>' +
-    '<p id="exportEditedEmpty" class="batch-empty">Chưa có ảnh tải lên. Bấm Nhiều ảnh để thêm ảnh, hoặc chọn ảnh từ tab Ảnh.</p>' +
-    '<button type="button" class="btn" data-open-batch>▦ Quản lý ảnh đã tải lên</button>';
+    '<p id="exportEditedEmpty" class="batch-empty export-empty-note">Chưa có ảnh tải lên. Bấm Nhiều ảnh để thêm ảnh, hoặc chọn ảnh từ tab Ảnh.</p>' +
+    '<button type="button" class="btn" data-open-batch><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Quản lý ảnh đã tải lên</button>';
   panel.appendChild(exportSection);
   var batchSection = document.createElement("section");
   batchSection.className = "sheet-section batch-workflow";
@@ -344,7 +344,7 @@
       var response = await fetch(probe.toString(), {cache:"no-store"});
       if (!response.ok) throw new Error("Không kết nối được máy chủ");
       var source = await response.text();
-      if (source.indexOf("mobile-ui.css?v=20261114-9") === -1)
+      if (source.indexOf("mobile-ui.css?v=20261114-10") === -1)
         throw new Error("Bản mới chưa có trên máy chủ");
       if ("serviceWorker" in navigator) {
         var reg = await navigator.serviceWorker.getRegistration();
@@ -355,11 +355,11 @@
       if ("caches" in window) {
         var names = await caches.keys();
         await Promise.all(names.filter(function (name) {
-          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-9-20261114";
+          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-10-20261114";
         }).map(function (name) { return caches.delete(name); }));
       }
       var next = new URL("./index.html", location.href);
-      next.searchParams.set("v", "13.9");
+      next.searchParams.set("v", "13.10");
       next.searchParams.set("fresh", Date.now().toString(36));
       location.replace(next.toString());
     } catch (error) {
