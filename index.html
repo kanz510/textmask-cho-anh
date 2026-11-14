@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#f8f5ff" />
-    <meta name="textmask-build" content="13.4" />
+    <meta name="textmask-build" content="13.5" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -276,9 +276,18 @@
       @media (prefers-reduced-motion: reduce) {
         * { transition: none !important; }
       }
+      /* V13.5: visually align all five dock labels on portrait iPhone. */
+      @media (max-width: 900px) and (orientation: portrait) {
+        .dock-item:not(.export) > svg { margin: 5px 0; }
+      }
+      /* Standalone diagnostic baseline: remove uncertain env() padding.
+         Read actual viewport geometry from the version label in ⋯ menu. */
+      @media (max-width: 900px) and (display-mode: standalone) and (orientation: portrait) {
+        html:root { --mobile-safe-bottom: 20px; }
+      }
     </style>
-    <link rel="stylesheet" href="./mobile-ui.css?v=20261114-4" />
-    <link rel="stylesheet" href="./batch-workspace.css?v=20261114-4" />
+    <link rel="stylesheet" href="./mobile-ui.css?v=20261114-5" />
+    <link rel="stylesheet" href="./batch-workspace.css?v=20261114-5" />
   </head>
   <body>
     <div class="wrap">
@@ -843,10 +852,14 @@
         g.font = "500 15px 'Be Vietnam Pro', sans-serif";
         g.fillText("CUSHION · SPF 50", 0, 24);
         g.restore();
-        // caption chip
+        // caption chip — size the pill to the rendered text, never a fixed width
+        var caption = "Ảnh mẫu — hãy chọn ảnh của bạn";
+        g.font = "600 24px 'Be Vietnam Pro', sans-serif";
+        g.textAlign = "left"; g.textBaseline = "middle";
+        var rx = 36, ry = 796, rh = 56, rr = 28;
+        var rw = Math.min(Math.ceil(g.measureText(caption).width) + rr * 2, c.width - rx * 2);
         g.fillStyle = "rgba(20,16,12,0.55)";
         g.beginPath();
-        var rx = 36, ry = 796, rw = 330, rh = 56, rr = 28;
         g.moveTo(rx + rr, ry);
         g.arcTo(rx + rw, ry, rx + rw, ry + rh, rr);
         g.arcTo(rx + rw, ry + rh, rx, ry + rh, rr);
@@ -854,8 +867,7 @@
         g.arcTo(rx, ry, rx + rw, ry, rr);
         g.closePath(); g.fill();
         g.fillStyle = "#ffffff";
-        g.font = "600 24px 'Be Vietnam Pro', sans-serif"; g.textAlign = "left"; g.textBaseline = "middle";
-        g.fillText("Ảnh mẫu — hãy chọn ảnh của bạn", rx + 24, ry + rh / 2 + 1);
+        g.fillText(caption, rx + rr, ry + rh / 2 + 1);
         return c;
       }
 
@@ -1270,11 +1282,23 @@
       var demo = makeDemoImage();
       setImage(demo, demo.width, demo.height, "anh-mau", true);
       refreshThumbs();
+      if (document.fonts && document.fonts.load) {
+        Promise.all([
+          document.fonts.load("600 24px 'Be Vietnam Pro'", "Ảnh mẫu — hãy chọn ảnh của bạn"),
+          document.fonts.load("500 15px 'Be Vietnam Pro'", "CUSHION"),
+          document.fonts.load("700 40px 'Playfair Display'", "B PARIS"),
+          document.fonts.load("600 25px 'Playfair Display'", "PARIS")
+        ]).then(function () {
+          if (!state.isDemo) return;
+          var c = makeDemoImage();
+          setImage(c, c.width, c.height, "anh-mau", true);
+        }, function () {});
+      }
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(function () { render(); refreshThumbs(); });
       }
     </script>
-    <script src="./mobile-ui.js?v=20261114-4"></script>
-    <script src="./batch-workspace.js?v=20261114-4"></script>
+    <script src="./mobile-ui.js?v=20261114-5"></script>
+    <script src="./batch-workspace.js?v=20261114-5"></script>
   </body>
 </html>

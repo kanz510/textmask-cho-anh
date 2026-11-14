@@ -109,7 +109,7 @@
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
     '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
     '<button type="button" class="btn wide" id="appRefreshBtn">↻ Cập nhật ứng dụng</button>' +
-    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.4 · Không xoá ảnh và công thức khi cập nhật.</p>' +
+    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.5 · Chạm để xem số đo dock</p>' +
     '<p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
@@ -312,6 +312,52 @@
         .catch(function () {});
     });
   }
+  // On-device layout probe: available by tapping the version label in ⋯.
+  // Does not mutate styling, IndexedDB or photos, and stays out of the editor.
+  var versionInfo = document.getElementById("appVersionInfo");
+  if (versionInfo) {
+    var versionLabel = "Textmask Studio V13.5 · Chạm để xem số đo dock";
+    versionInfo.setAttribute("role", "button");
+    versionInfo.setAttribute("tabindex", "0");
+    versionInfo.setAttribute("aria-label", "Xem hoặc ẩn số đo bố cục iPhone");
+    versionInfo.addEventListener("click", function () {
+      if (versionInfo.dataset.metricsVisible === "1") {
+        versionInfo.dataset.metricsVisible = "0";
+        versionInfo.textContent = versionLabel;
+        return;
+      }
+      var styles = getComputedStyle(document.documentElement);
+      var dockRect = dock.getBoundingClientRect();
+      var vv = window.visualViewport;
+      var layout = document.querySelector(".layout");
+      var layoutRect = layout && layout.getBoundingClientRect();
+      var round = function (number) {
+        return typeof number === "number" ? Math.round(number * 10) / 10 : "—";
+      };
+      var metricLines = [
+        "V13.5 · Thông số PWA (chạm để ẩn)",
+        "Standalone: " + (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true),
+        "Screen H: " + screen.height + " · Inner H: " + window.innerHeight,
+        "Visual H: " + (vv ? round(vv.height) : "—") +
+          " · Offset: " + (vv ? round(vv.offsetTop) : "—"),
+        "Safe bottom CSS: " + styles.getPropertyValue("--mobile-safe-bottom").trim(),
+        "Dock CSS H: " + getComputedStyle(dock).height +
+          " · Rect H: " + round(dockRect.height),
+        "Dock bottom: " + round(dockRect.bottom) +
+          " · Gap(vh): " + round(window.innerHeight - dockRect.bottom),
+        "Layout bottom: " + (layoutRect ? round(layoutRect.bottom) : "—")
+      ];
+      versionInfo.dataset.metricsVisible = "1";
+      versionInfo.style.whiteSpace = "pre-line";
+      versionInfo.textContent = metricLines.join("\n");
+    });
+    versionInfo.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        versionInfo.click();
+      }
+    });
+  }
   var refreshButton = document.getElementById("appRefreshBtn");
   if (refreshButton) refreshButton.addEventListener("click", async function () {
     refreshButton.disabled = true;
@@ -324,7 +370,7 @@
       var response = await fetch(probe.toString(), {cache:"no-store"});
       if (!response.ok) throw new Error("Không kết nối được máy chủ");
       var source = await response.text();
-      if (source.indexOf("mobile-ui.css?v=20261114-4") === -1)
+      if (source.indexOf("mobile-ui.css?v=20261114-5") === -1)
         throw new Error("Bản mới chưa có trên máy chủ");
       if ("serviceWorker" in navigator) {
         var reg = await navigator.serviceWorker.getRegistration();
@@ -335,11 +381,11 @@
       if ("caches" in window) {
         var names = await caches.keys();
         await Promise.all(names.filter(function (name) {
-          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-4-20261114";
+          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-5-20261114";
         }).map(function (name) { return caches.delete(name); }));
       }
       var next = new URL("./index.html", location.href);
-      next.searchParams.set("v", "13.4");
+      next.searchParams.set("v", "13.5");
       next.searchParams.set("fresh", Date.now().toString(36));
       location.replace(next.toString());
     } catch (error) {

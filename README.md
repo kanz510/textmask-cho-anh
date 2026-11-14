@@ -109,3 +109,14 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - Thêm trong menu ••• nút **Cập nhật ứng dụng**, kiểm tra HTML mới trực tiếp, xoá **chỉ** các cache Textmask cũ, rồi chuyển về `index.html?v=13.4`.
 - Không xoá IndexedDB, ảnh tải lên, công thức đã lưu hay thay đổi bộ máy chỉnh ảnh. Không reload bất ngờ trong lúc chỉnh ảnh.
 - Chưa thử trực tiếp trên PWA iPhone; nếu khoảng trống đáy vẫn còn sau khi đã xác minh V13.4, cần đo innerHeight, visualViewport.height, dock.getBoundingClientRect() và safe-area trên thiết bị.
+
+
+### V13.5 · Sửa ảnh mẫu, font và đo lỗi dock trên iOS standalone
+
+- Chú thích ảnh mẫu: đo chiều rộng chữ bằng Canvas measureText trước khi vẽ pill, tránh tràn chữ.
+- Tải tường minh Be Vietnam Pro (600/500) và Playfair Display (600/700) rồi vẽ lại ảnh mẫu nếu người dùng chưa chọn ảnh riêng.
+- Trong iPhone dọc: bù 5px lề trên/dưới của 4 icon thường để nhãn ngang hàng với Xuất.
+- PWA standalone dọc: ép `--mobile-safe-bottom:20px` bằng selector `html:root` để kiểm tra giả thuyết CSS safe-area bất thường; không thay đổi các trường hợp landscape/Safari tab.
+- Chạm dòng `Textmask Studio V13.5` trong menu ••• để xem số đo `screen.height`, `innerHeight`, `visualViewport.height`, custom property safe-bottom và `dock.getBoundingClientRect()`; chạm lại để ẩn. Debug không lưu dữ liệu và không can thiệp chức năng.
+- Giữ nguyên logic batch, kho công thức, lưu ảnh iPhone và IndexedDB. Tăng đồng bộ cache key và CSS/JS asset version.
+- **Hạn chế:** chưa xác minh nguyên nhân cuối của vùng trống trên iPhone thật. Có báo cáo WebKit về standalone viewport bị ngắn hơn màn hình vật lý; nếu số đo cho thấy `screen.height - innerHeight` gần bằng khoảng trống, cần dùng kết quả này để quyết định có chỉnh viewport-fit/ứng xử theo iOS phiên bản hay không.
