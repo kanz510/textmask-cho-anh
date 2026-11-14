@@ -109,7 +109,7 @@
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
     '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
     '<button type="button" class="btn wide" id="appRefreshBtn">↻ Cập nhật ứng dụng</button>' +
-    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.8 · Chạm để xem số đo dock</p>' +
+    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.9 · Đã tối ưu cho iPhone</p>' +
     '<p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
@@ -246,39 +246,12 @@
   // On-device measurements: innerHeight=874 and dock.bottom=874, but the
   // documentElement.clientHeight is only 812. The dock is already correctly
   // anchored: fix the short HTML/app root instead of shifting the fixed dock.
-  var dockDebug = document.createElement("div");
-  dockDebug.id = "pwaDockDebug";
-  dockDebug.setAttribute("aria-label", "Thông số chẩn đoán vị trí thanh công cụ");
-  document.body.appendChild(dockDebug);
-  var dockDebugFrame = 0;
-  function renderDockDebug() {
-    dockDebugFrame = 0;
-    if (!mq.matches) return;
-    var vv = window.visualViewport;
-    var rect = dock.getBoundingClientRect();
-    var root = document.documentElement;
-    dockDebug.textContent = [
-      "window.innerHeight: " + window.innerHeight,
-      "screen.height: " + screen.height,
-      "visualViewport.height: " + (vv ? vv.height.toFixed(1) : "N/A"),
-      "document.documentElement.clientHeight: " + root.clientHeight,
-      "mobileDock.getBoundingClientRect().bottom: " + rect.bottom.toFixed(1),
-      "HTML root CSS H: " + getComputedStyle(root).height,
-      "Applied gap: " + getComputedStyle(root).getPropertyValue("--pwa-viewport-gap").trim(),
-      "innerHeight − clientHeight: " + (window.innerHeight - root.clientHeight).toFixed(1),
-      "screen-bottom − dock-bottom: " + (screen.height - rect.bottom).toFixed(1)
-    ].join("\n");
-  }
-  function queueDockDebug() {
-    if (!dockDebugFrame) dockDebugFrame = requestAnimationFrame(renderDockDebug);
-  }
   function syncVisibleHeight() {
     var root = document.documentElement;
     if (!mq.matches) {
       root.style.removeProperty("--app-height");
       root.style.removeProperty("--pwa-viewport-gap");
       root.classList.remove("pwa-viewport-fix");
-      dockDebug.hidden = true;
       return;
     }
     var vv = window.visualViewport;
@@ -308,8 +281,6 @@
       root.style.removeProperty("--pwa-viewport-gap");
     }
     root.classList.toggle("pwa-viewport-fix", standalone && portrait);
-    dockDebug.hidden = !(standalone && portrait);
-    queueDockDebug();
   }
   syncVisibleHeight();
   if (window.visualViewport) {
@@ -361,52 +332,6 @@
         .catch(function () {});
     });
   }
-  // On-device layout probe: available by tapping the version label in ⋯.
-  // Does not mutate styling, IndexedDB or photos, and stays out of the editor.
-  var versionInfo = document.getElementById("appVersionInfo");
-  if (versionInfo) {
-    var versionLabel = "Textmask Studio V13.8 · Chạm để xem số đo dock";
-    versionInfo.setAttribute("role", "button");
-    versionInfo.setAttribute("tabindex", "0");
-    versionInfo.setAttribute("aria-label", "Xem hoặc ẩn số đo bố cục iPhone");
-    versionInfo.addEventListener("click", function () {
-      if (versionInfo.dataset.metricsVisible === "1") {
-        versionInfo.dataset.metricsVisible = "0";
-        versionInfo.textContent = versionLabel;
-        return;
-      }
-      var styles = getComputedStyle(document.documentElement);
-      var dockRect = dock.getBoundingClientRect();
-      var vv = window.visualViewport;
-      var layout = document.querySelector(".layout");
-      var layoutRect = layout && layout.getBoundingClientRect();
-      var round = function (number) {
-        return typeof number === "number" ? Math.round(number * 10) / 10 : "—";
-      };
-      var metricLines = [
-        "V13.8 · Thông số PWA (chạm để ẩn)",
-        "Standalone: " + (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true),
-        "Screen H: " + screen.height + " · Inner H: " + window.innerHeight,
-        "Visual H: " + (vv ? round(vv.height) : "—") +
-          " · Offset: " + (vv ? round(vv.offsetTop) : "—"),
-        "Safe bottom CSS: " + styles.getPropertyValue("--mobile-safe-bottom").trim(),
-        "Dock CSS H: " + getComputedStyle(dock).height +
-          " · Rect H: " + round(dockRect.height),
-        "Dock bottom: " + round(dockRect.bottom) +
-          " · Gap(vh): " + round(window.innerHeight - dockRect.bottom),
-        "Layout bottom: " + (layoutRect ? round(layoutRect.bottom) : "—")
-      ];
-      versionInfo.dataset.metricsVisible = "1";
-      versionInfo.style.whiteSpace = "pre-line";
-      versionInfo.textContent = metricLines.join("\n");
-    });
-    versionInfo.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        versionInfo.click();
-      }
-    });
-  }
   var refreshButton = document.getElementById("appRefreshBtn");
   if (refreshButton) refreshButton.addEventListener("click", async function () {
     refreshButton.disabled = true;
@@ -419,7 +344,7 @@
       var response = await fetch(probe.toString(), {cache:"no-store"});
       if (!response.ok) throw new Error("Không kết nối được máy chủ");
       var source = await response.text();
-      if (source.indexOf("mobile-ui.css?v=20261114-8") === -1)
+      if (source.indexOf("mobile-ui.css?v=20261114-9") === -1)
         throw new Error("Bản mới chưa có trên máy chủ");
       if ("serviceWorker" in navigator) {
         var reg = await navigator.serviceWorker.getRegistration();
@@ -430,11 +355,11 @@
       if ("caches" in window) {
         var names = await caches.keys();
         await Promise.all(names.filter(function (name) {
-          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-8-20261114";
+          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-9-20261114";
         }).map(function (name) { return caches.delete(name); }));
       }
       var next = new URL("./index.html", location.href);
-      next.searchParams.set("v", "13.8");
+      next.searchParams.set("v", "13.9");
       next.searchParams.set("fresh", Date.now().toString(36));
       location.replace(next.toString());
     } catch (error) {

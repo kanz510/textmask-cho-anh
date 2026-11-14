@@ -748,24 +748,6 @@ canvas#preview{max-width:calc(100% - 8px);max-height:calc(100% - 8px);border-rad
    Use physical screen height for the app, and offset fixed dock by only
    the measured difference between screen.height and window.innerHeight. */
 @media (max-width:900px) {
-  #pwaDockDebug {
-    position:fixed;
-    top:80px;
-    left:8px;
-    z-index:9999;
-    box-sizing:border-box;
-    max-width:calc(100vw - 16px);
-    padding:8px 10px;
-    border-radius:10px;
-    font:600 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size:12px;
-    color:#fff;
-    background:rgba(19,17,31,.91);
-    box-shadow:0 4px 22px rgba(0,0,0,.3);
-    white-space:pre-line;
-    pointer-events:none;
-  }
-  #pwaDockDebug[hidden] { display:none!important; }
   html.pwa-viewport-fix,
   html.pwa-viewport-fix body {
     height:var(--app-height,100dvh);
