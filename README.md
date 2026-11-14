@@ -120,3 +120,5 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - Chạm dòng `Textmask Studio V13.5` trong menu ••• để xem số đo `screen.height`, `innerHeight`, `visualViewport.height`, custom property safe-bottom và `dock.getBoundingClientRect()`; chạm lại để ẩn. Debug không lưu dữ liệu và không can thiệp chức năng.
 - Giữ nguyên logic batch, kho công thức, lưu ảnh iPhone và IndexedDB. Tăng đồng bộ cache key và CSS/JS asset version.
 - **Hạn chế:** chưa xác minh nguyên nhân cuối của vùng trống trên iPhone thật. Có báo cáo WebKit về standalone viewport bị ngắn hơn màn hình vật lý; nếu số đo cho thấy `screen.height - innerHeight` gần bằng khoảng trống, cần dùng kết quả này để quyết định có chỉnh viewport-fit/ứng xử theo iOS phiên bản hay không.
+
+- Tương thích với nút cập nhật của V13.4: giữ chuỗi kiểm tra legacy trong HTML comment (không tải CSS cũ) để PWA cũ có thể chuyển lên V13.5.
