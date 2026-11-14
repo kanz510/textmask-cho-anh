@@ -109,7 +109,7 @@
     '<button type="button" class="btn" data-proxy="demoBtn">Dùng ảnh mẫu</button>' +
     '<button type="button" class="btn wide" data-open-batch>▦ Ảnh đã tải lên · Sửa nhiều ảnh</button>' +
     '<button type="button" class="btn wide" id="appRefreshBtn">↻ Cập nhật ứng dụng</button>' +
-    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.5 · Chạm để xem số đo dock</p>' +
+    '</div><p class="sheet-note" id="appVersionInfo">Textmask Studio V13.6 · Chạm để xem số đo dock</p>' +
     '<p class="sheet-note">Bạn cũng có thể kéo thả hoặc dán ảnh vào trang trên máy tính. Ảnh không được tải lên máy chủ.</p>';
   panel.appendChild(moreSection);
 
@@ -243,31 +243,74 @@
   else if (mq.addListener) mq.addListener(adaptLayout);
   adaptLayout();
 
-  // Safari's visualViewport can be shorter than the full screen even with
-  // no keyboard. Only use it for an actual on-screen keyboard to avoid leaving
-  // a large blank band beneath the fixed navigation dock on iPhone.
+  // iOS standalone occasionally reports a layout viewport shorter than
+  // the physical portrait screen (for example, 812 vs 874 CSS points).
+  // A fixed bottom:0 element is then anchored above the actual Home indicator.
+  // Measure that deficit and extend the dock and app in the *standalone*
+  // portrait layout only. Never compensate for the software keyboard.
+  var dockDebug = document.createElement("div");
+  dockDebug.id = "pwaDockDebug";
+  dockDebug.setAttribute("aria-label", "Thông số chẩn đoán vị trí thanh công cụ");
+  document.body.appendChild(dockDebug);
+  var dockDebugFrame = 0;
+  function renderDockDebug() {
+    dockDebugFrame = 0;
+    if (!mq.matches) return;
+    var vv = window.visualViewport;
+    var rect = dock.getBoundingClientRect();
+    var root = document.documentElement;
+    dockDebug.textContent = [
+      "window.innerHeight: " + window.innerHeight,
+      "screen.height: " + screen.height,
+      "visualViewport.height: " + (vv ? vv.height.toFixed(1) : "N/A"),
+      "document.documentElement.clientHeight: " + root.clientHeight,
+      "mobileDock.getBoundingClientRect().bottom: " + rect.bottom.toFixed(1),
+      "PWA gap: " + getComputedStyle(root).getPropertyValue("--pwa-viewport-gap").trim(),
+      "screen-bottom − dock-bottom: " + (screen.height - rect.bottom).toFixed(1)
+    ].join("\n");
+  }
+  function queueDockDebug() {
+    if (!dockDebugFrame) dockDebugFrame = requestAnimationFrame(renderDockDebug);
+  }
   function syncVisibleHeight() {
+    var root = document.documentElement;
     if (!mq.matches) {
-      document.documentElement.style.removeProperty("--app-height");
+      root.style.removeProperty("--app-height");
+      root.style.removeProperty("--pwa-viewport-gap");
+      root.classList.remove("pwa-viewport-fix");
+      dockDebug.hidden = true;
       return;
     }
     var vv = window.visualViewport;
     var active = document.activeElement;
     var editing = !!(active && /^(INPUT|TEXTAREA)$/.test(active.tagName) &&
       !/^(range|color|file|checkbox|radio|button)$/i.test(active.type || ""));
-    var viewportH = window.innerHeight || document.documentElement.clientHeight;
+    var viewportH = window.innerHeight || root.clientHeight;
     var keyboardUp = !!(editing && vv && viewportH - vv.height > 120);
+    var standalone = window.matchMedia("(display-mode: standalone)").matches ||
+      navigator.standalone === true;
+    var portrait = window.matchMedia("(orientation: portrait)").matches;
     if (keyboardUp) {
-      document.documentElement.style.setProperty("--app-height", Math.round(vv.height) + "px");
+      root.style.setProperty("--app-height", Math.round(vv.height) + "px");
     } else {
-      document.documentElement.style.removeProperty("--app-height");
+      root.style.removeProperty("--app-height");
     }
+    var deficit = screen.height - viewportH;
+    // Keep browser/Safari tab layouts unchanged. Never extend for input focus,
+    // fullscreen quirks, or an implausible screen-height measurement.
+    var gap = standalone && portrait && !keyboardUp && deficit >= 8 &&
+      deficit <= 140 ? Math.round(deficit) : 0;
+    root.style.setProperty("--pwa-viewport-gap", gap + "px");
+    root.classList.toggle("pwa-viewport-fix", standalone && portrait);
+    dockDebug.hidden = !(standalone && portrait);
+    queueDockDebug();
   }
   syncVisibleHeight();
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", syncVisibleHeight);
     window.visualViewport.addEventListener("scroll", syncVisibleHeight);
   }
+  window.addEventListener("resize", syncVisibleHeight);
   window.addEventListener("orientationchange", syncVisibleHeight);
 
   // Drag the small grab-handle down to dismiss the glass sheet.
@@ -316,7 +359,7 @@
   // Does not mutate styling, IndexedDB or photos, and stays out of the editor.
   var versionInfo = document.getElementById("appVersionInfo");
   if (versionInfo) {
-    var versionLabel = "Textmask Studio V13.5 · Chạm để xem số đo dock";
+    var versionLabel = "Textmask Studio V13.6 · Chạm để xem số đo dock";
     versionInfo.setAttribute("role", "button");
     versionInfo.setAttribute("tabindex", "0");
     versionInfo.setAttribute("aria-label", "Xem hoặc ẩn số đo bố cục iPhone");
@@ -335,7 +378,7 @@
         return typeof number === "number" ? Math.round(number * 10) / 10 : "—";
       };
       var metricLines = [
-        "V13.5 · Thông số PWA (chạm để ẩn)",
+        "V13.6 · Thông số PWA (chạm để ẩn)",
         "Standalone: " + (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true),
         "Screen H: " + screen.height + " · Inner H: " + window.innerHeight,
         "Visual H: " + (vv ? round(vv.height) : "—") +
@@ -370,7 +413,7 @@
       var response = await fetch(probe.toString(), {cache:"no-store"});
       if (!response.ok) throw new Error("Không kết nối được máy chủ");
       var source = await response.text();
-      if (source.indexOf("mobile-ui.css?v=20261114-5") === -1)
+      if (source.indexOf("mobile-ui.css?v=20261114-6") === -1)
         throw new Error("Bản mới chưa có trên máy chủ");
       if ("serviceWorker" in navigator) {
         var reg = await navigator.serviceWorker.getRegistration();
@@ -381,11 +424,11 @@
       if ("caches" in window) {
         var names = await caches.keys();
         await Promise.all(names.filter(function (name) {
-          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-5-20261114";
+          return name.startsWith("textmask-studio-") && name !== "textmask-studio-v13-6-20261114";
         }).map(function (name) { return caches.delete(name); }));
       }
       var next = new URL("./index.html", location.href);
-      next.searchParams.set("v", "13.5");
+      next.searchParams.set("v", "13.6");
       next.searchParams.set("fresh", Date.now().toString(36));
       location.replace(next.toString());
     } catch (error) {

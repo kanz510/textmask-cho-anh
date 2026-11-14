@@ -122,3 +122,12 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - **Hạn chế:** chưa xác minh nguyên nhân cuối của vùng trống trên iPhone thật. Có báo cáo WebKit về standalone viewport bị ngắn hơn màn hình vật lý; nếu số đo cho thấy `screen.height - innerHeight` gần bằng khoảng trống, cần dùng kết quả này để quyết định có chỉnh viewport-fit/ứng xử theo iOS phiên bản hay không.
 
 - Tương thích với nút cập nhật của V13.4: giữ chuỗi kiểm tra legacy trong HTML comment (không tải CSS cũ) để PWA cũ có thể chuyển lên V13.5.
+
+
+### V13.6 · Hiển thị chẩn đoán PWA và bù hụt chiều cao viewport
+
+- Khi mở dạng standalone dọc, hiển thị khung debug tạm ở góc trên `position:fixed;top:80px;z-index:9999;font-size:12px` với 5 thông số: `innerHeight`, `screen.height`, `visualViewport.height`, `documentElement.clientHeight`, `mobileDock.getBoundingClientRect().bottom`. Đồng thời hiển thị độ lệch đang được bù.
+- Nếu `screen.height` lớn hơn `window.innerHeight` trong khoảng hợp lý 8–140px và không có bàn phím, JS đặt `--pwa-viewport-gap`; CSS kéo body/wrap dài ra và đặt dock `bottom:-gap`, giữ home indicator trong padding của dock. Chỉ áp dụng standalone, màn dọc.
+- Nhận biết standalone bằng `display-mode:standalone` hoặc `navigator.standalone`; không tác động tab Safari, màn ngang hay bàn phím ảo. Không đổi logic xuất, batch, công thức, lưu trữ ảnh.
+- Bổ sung marker tương thích nút cập nhật từ V13.4/V13.5. Nâng cache và phiên bản CSS/JS thành V13.6.
+- **Cần kiểm thử trên iPhone thực tế**: đây là bù viewport dựa vào thông số trình duyệt, chưa có phép đo trực tiếp từ thiết bị. Nếu dock còn cách đáy, chụp khung debug để xác định sai lệch.
