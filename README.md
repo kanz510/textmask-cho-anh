@@ -131,3 +131,12 @@ Mức **Rất thưa** là mặc định, dùng khoảng cách ngang/dọc lớn 
 - Nhận biết standalone bằng `display-mode:standalone` hoặc `navigator.standalone`; không tác động tab Safari, màn ngang hay bàn phím ảo. Không đổi logic xuất, batch, công thức, lưu trữ ảnh.
 - Bổ sung marker tương thích nút cập nhật từ V13.4/V13.5. Nâng cache và phiên bản CSS/JS thành V13.6.
 - **Cần kiểm thử trên iPhone thực tế**: đây là bù viewport dựa vào thông số trình duyệt, chưa có phép đo trực tiếp từ thiết bị. Nếu dock còn cách đáy, chụp khung debug để xác định sai lệch.
+
+
+### V13.7 · Sửa kích thước HTML 812px/874px trên iPhone PWA
+
+- Dữ liệu debug thật từ iPhone người dùng: `innerHeight=874`, `screen.height=874`, `visualViewport.height=874`, `documentElement.clientHeight=812`, `mobileDock.getBoundingClientRect().bottom=874`. Khoảng thiếu **62px nằm ở HTML root**, không phải vị trí dock.
+- Trong PWA standalone màn dọc và không mở bàn phím: đặt `--app-height=window.innerHeight + 'px'` để `html`, `body`, `.wrap` sử dụng chiều cao thật.
+- Xoá cơ chế bù sai `--pwa-viewport-gap` dựa vào `screen.height - window.innerHeight`. Dock giữ đúng `bottom:0`, home indicator vẫn nằm trong padding của dock.
+- Giữ khung debug tạm để kiểm tra `documentElement.clientHeight` và `dock.bottom` sau khi sửa; xem thêm `innerHeight − clientHeight`. Sau khi xác nhận bằng iPhone sẽ gỡ khung debug.
+- Không thay logic chỉnh ảnh, IndexedDB, batch, kho công thức hoặc Lưu vào Ảnh. Nâng phiên bản CSS/JS, SW cache và giữ marker cho nút Cập nhật từ bản V13.4–V13.6.

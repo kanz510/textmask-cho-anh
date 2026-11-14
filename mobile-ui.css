@@ -744,11 +744,10 @@ canvas#preview{max-width:calc(100% - 8px);max-height:calc(100% - 8px);border-rad
   .dock-item { min-height:0; }
 }
 
-/* V13.6 · temporary PWA standalone viewport-deficit correction.
-   If iOS reports innerHeight shorter than screen.height, bottom:0 is not the
-   physical bottom; the difference is measured, capped and applied by JS.
-   Do not apply this to Safari tabs, landscape or the software keyboard. */
-:root { --pwa-viewport-gap:0px; }
+/* V13.7 · PWA root height fix based on actual on-device measurements.
+   innerHeight=874 and dock.bottom=874, but html.clientHeight=812.
+   The dock is already correctly anchored. Extend the HTML document and
+   editor canvas to innerHeight instead of negatively offsetting the dock. */
 @media (max-width:900px) {
   #pwaDockDebug {
     position:fixed;
@@ -770,16 +769,16 @@ canvas#preview{max-width:calc(100% - 8px);max-height:calc(100% - 8px);border-rad
   #pwaDockDebug[hidden] { display:none!important; }
   html.pwa-viewport-fix,
   html.pwa-viewport-fix body {
-    height:calc(100dvh + var(--pwa-viewport-gap,0px));
+    height:var(--app-height,100dvh);
     overflow:hidden;
   }
   html.pwa-viewport-fix .wrap {
-    height:calc(var(--app-height,100dvh) + var(--pwa-viewport-gap,0px));
+    height:var(--app-height,100dvh);
   }
   html.pwa-viewport-fix .mobile-dock {
-    bottom:calc(0px - var(--pwa-viewport-gap,0px));
+    bottom:0;
   }
   html.pwa-viewport-fix .panel {
-    bottom:calc(var(--mobile-safe-bottom,20px) - var(--pwa-viewport-gap,0px));
+    bottom:var(--mobile-safe-bottom,20px);
   }
 }
